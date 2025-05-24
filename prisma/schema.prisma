@@ -1,3 +1,4 @@
+
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
@@ -16,31 +17,54 @@ datasource db {
 
 model User {
   id        Int      @id @default(autoincrement())
+  username      String?
   email     String   @unique
   password  String
-  name      String?
+  products  Product[]
+  role      Role @default(USER)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  orders    Order[]
+  updatedAt DateTime? @updatedAt
+
+}
+
+enum Role {
+  ADMIN
+  EMPLOYER
+  USER
 }
 
 model Product {
   id          Int      @id @default(autoincrement())
-  name        String
+  title       String
   description String?
   price       Float
-  stock       Int
+  inStock     Boolean  @default(true)
+  category    Category @default(None)
+  stockId     Int?     // optional relation (nullable if not always linked)
+  stock       Stock?   @relation(fields: [stockId], references: [id])
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  orders      Order[]
+  updateAt    DateTime @updatedAt
 }
 
-model Order {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  productId Int
-  product   Product  @relation(fields: [productId], references: [id])
-  quantity  Int
-  createdAt DateTime @default(now())
+model Stock {
+  id       Int       @id @default(autoincrement())
+  count Int @default(0)
+  category Category  @default(None)
+  product Product[]
 }
+
+enum Category {
+  MacBookAir
+  MacBookPro
+  iPhone
+  iPad
+  AirPods
+  AppleWatchMini
+  AppleWatchPro
+  AppleWatchUltra
+  Accessories
+  None
+}
+

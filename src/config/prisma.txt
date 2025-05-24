@@ -1,0 +1,279 @@
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username      String?
+  email     String   @unique
+  password  String
+  products  Product[]
+  role      Role @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime? @updatedAt
+
+}
+
+enum Role {
+  ADMIN
+  EMPLOYER
+  USER
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  price       Float
+  inStock     Boolean  @default(true)
+  category    Category @default(None)
+  stockId     Int?     // optional relation (nullable if not always linked)
+  stock       Stock?   @relation(fields: [stockId], references: [id])
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updateAt    DateTime @updatedAt
+}
+
+model Stock {
+  id       Int       @id @default(autoincrement())
+  count Int @default(0)
+  category Category  @default(None)
+  product Product[]
+}
+
+enum Category {
+  MacBookAir
+  MacBookPro
+  iPhone
+  iPad
+  AirPods
+  AppleWatchMini
+  AppleWatchPro
+  AppleWatchUltra
+  Accessories
+  None
+}
+
+
+// // model User {
+// //   id        Int      @id @default(autoincrement())
+// //   name      String?
+// //   email     String   @unique
+// //   password  String
+// //   orders    Order[]
+// //   createdAt DateTime @default(now())
+// //   updatedAt DateTime @updatedAt
+// // }
+// model User {
+//   id        Int      @id @default(autoincrement())
+//   username  String?
+//   fullName String?
+//   email     String   @unique
+//   password  String
+//   address   String?
+//   phone     String?
+//   cart      Cart?
+//   orders    Order[]
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
+
+// model Product {
+//   id          Int      @id @default(autoincrement())
+//   name        String
+//   description String?
+//   price       Float
+//   stock       Int
+//   createdAt   DateTime @default(now())
+//   updatedAt   DateTime @updatedAt
+//   orders      Order[]
+//   image       Image[]
+// }
+// model ProductVariant {
+//   id        Int     @id @default(autoincrement())
+//   product   Product @relation(fields: [productId], references: [id])
+//   productId Int
+//   name      String  // e.g., "Small", "Red"
+//   price     Float?
+//   stock     Int
+//   createdAt DateTime @default(now())
+// }
+
+// model Review {
+//   id        Int     @id @default(autoincrement())
+//   product   Product @relation(fields: [productId], references: [id])
+//   productId Int
+//   user      User    @relation(fields: [userId], references: [id])
+//   userId    Int
+//   rating    Int     // e.g., 1-5 stars
+//   comment   String?
+//   createdAt DateTime @default(now())
+// }
+// model Image {
+//   id        Int     @id @default(autoincrement())
+//   url       String
+//   productId Int
+//   product   Product @relation(fields: [productId], references: [id])
+//   createdAt DateTime @default(now())
+// }
+// model Cart {
+//   id        Int       @id @default(autoincrement())
+//   user      User      @relation(fields: [userId], references: [id])
+//   userId    Int       @unique
+//   items     CartItem[]
+//   createdAt DateTime  @default(now())
+//   updatedAt DateTime  @updatedAt
+// }
+
+// // model Order {
+// //   id        Int      @id @default(autoincrement())
+// //   userId    Int
+// //   user      User     @relation(fields: [userId], references: [id])
+// //   productId Int
+// //   product   Product  @relation(fields: [productId], references: [id])
+// //   quantity  Int
+// //   createdAt DateTime @default(now())
+// // }
+
+// enum OrderStatus {
+//   PENDING
+//   PROCESSING
+//   SHIPPED
+//   DELIVERED
+//   CANCELED
+// }
+
+// model Order {
+//   id            Int         @id @default(autoincrement())
+//   user          User        @relation(fields: [userId], references: [id])
+//   userId        Int
+//   items         OrderItem[]
+//   total         Float
+//   status        OrderStatus @default(PENDING)
+//   shippingAddress String?
+//   billingAddress  String?
+//   paymentMethod   String?
+//   createdAt     DateTime    @default(now())
+//   updatedAt     DateTime    @updatedAt
+// }
+
+// model Payment {
+//   id        Int     @id @default(autoincrement())
+//   order     Order   @relation(fields: [orderId], references: [id])
+//   orderId   Int
+//   amount    Float
+//   status    String  // e.g., "completed", "failed"
+//   transactionId String
+//   createdAt DateTime @default(now())
+// }
+// copy from sample project
+// generator client {
+//   provider = "prisma-client-js"
+// }
+
+// datasource db {
+//   provider = "mysql"
+//   url      = env("DATABASE_URL")
+// }
+
+// model User {
+//   id Int @id @default(autoincrement())
+//   username String?
+//   email String @unique 
+//   password String
+//   role Role @default(USER)
+// }
+
+// enum Role {
+//   ADMIN
+//   EMPLOYER
+//   USER
+// }
+
+// model Product {
+//   id            Int         @id @default(autoincrement())
+//   name          String
+//   sku           String      @unique
+//   description   String?     @db.Text
+//   price         Float
+//   stock         Int
+//   status        Status      @default(active)
+//   // status        String      @default("active") // e.g., active, inactive, discontinued
+//   categoryId    Int?
+//   category      Category?   @relation(fields: [categoryId], references: [id])
+//   tags          Tag[]       @relation("ProductTags")
+//   variants      Variant[]
+//   images        Image[]
+//   stockHistory  StockHistory[]
+//   createdAt     DateTime    @default(now())
+//   updatedAt     DateTime    @updatedAt
+// }
+
+// enum Status {
+//   active
+//   inactive
+// }
+
+// model Category {
+//   id            Int         @id @default(autoincrement())
+//   name          String
+//   parentId      Int?        @map("parent_id")
+//   parent        Category?   @relation("CategoryHierarchy", fields: [parentId], references: [id])
+//   subcategories Category[]  @relation("CategoryHierarchy")
+//   products      Product[]
+//   createdAt     DateTime    @default(now())
+//   updatedAt     DateTime    @updatedAt
+// }
+
+// model Tag {
+//   id            Int         @id @default(autoincrement())
+//   name          String      @unique
+//   products      Product[]   @relation("ProductTags")
+//   createdAt     DateTime    @default(now())
+// }
+
+// model Variant {
+//   id            Int         @id @default(autoincrement())
+//   productId     Int
+//   product       Product     @relation(fields: [productId], references: [id])
+//   color         String?
+//   size          String?
+//   stock         Int
+//   sku           String      @unique
+//   price         Float?
+//   createdAt     DateTime    @default(now())
+//   updatedAt     DateTime    @updatedAt
+// }
+
+// model Image {
+//   id            Int         @id @default(autoincrement())
+//   productId     Int
+//   product       Product     @relation(fields: [productId], references: [id])
+//   url           String
+//   createdAt     DateTime    @default(now())
+// }
+
+// model StockHistory {
+//   id            Int         @id @default(autoincrement())
+//   productId     Int
+//   product       Product     @relation(fields: [productId], references: [id])
+//   quantity      Int
+//   reason        String      // e.g., "restock", "sale", "adjustment"
+//   location      String?     // For multi-location inventory
+//   createdAt     DateTime    @default(now())
+// }
+
