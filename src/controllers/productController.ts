@@ -16,6 +16,32 @@ export const createProduct = async (req: Request, res: Response) => {
   }
 };
 
+// import { Request, Response } from "express";
+// import prisma from "../config/database";
+// import { ProductRequestBody } from "../types";
+
+// export const createProduct = async (req: Request, res: Response) => {
+//   try {
+//     const { title, description, price, stockId, userId, category } =
+//       req.body as ProductRequestBody;
+//     console.log(req.body);
+//     const product = await prisma.product.create({
+//       data: {
+//         title,
+//         description,
+//         price,
+//         stockId,
+//         userId,
+//         // category: category as prisma.Prisma.Category, // cast to enum type
+//         category: category as prisma.Prisma.Category,
+//       },
+//     });
+//     res.status(201).json(product);
+//   } catch (error: any) {
+//     res.status(400).json({ error: error.message });
+//   }
+// };
+
 // export const createProduct = async (req: Request, res: Response) => {
 //   const { title, description, price, stockId, userId } =
 //     req.body as ProductRequestBody;

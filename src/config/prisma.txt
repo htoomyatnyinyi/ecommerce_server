@@ -1,83 +1,5 @@
 
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-generator client {
-  provider = "prisma-client-js"
-  // output   = "../generated/prisma"
-}
-
-datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
-}
-
-model User {
-  id        Int      @id @default(autoincrement())
-  username      String?
-  email     String   @unique
-  password  String
-  products  Product[]
-  role      Role @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime? @updatedAt
-
-}
-
-enum Role {
-  ADMIN
-  EMPLOYER
-  USER
-}
-
-model Product {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String?
-  price       Float
-  inStock     Boolean  @default(true)
-  category    Category @default(None)
-  stockId     Int?     // optional relation (nullable if not always linked)
-  stock       Stock?   @relation(fields: [stockId], references: [id])
-  userId      Int
-  user        User     @relation(fields: [userId], references: [id])
-  createdAt   DateTime @default(now())
-  updateAt    DateTime @updatedAt
-}
-
-model Stock {
-  id       Int       @id @default(autoincrement())
-  count Int @default(0)
-  category Category  @default(None)
-  product Product[]
-}
-
-enum Category {
-  MacBookAir
-  MacBookPro
-  iPhone
-  iPad
-  AirPods
-  AppleWatchMini
-  AppleWatchPro
-  AppleWatchUltra
-  Accessories
-  None
-}
-
-
-// // model User {
-// //   id        Int      @id @default(autoincrement())
-// //   name      String?
-// //   email     String   @unique
-// //   password  String
-// //   orders    Order[]
-// //   createdAt DateTime @default(now())
-// //   updatedAt DateTime @updatedAt
-// // }
 // model User {
 //   id        Int      @id @default(autoincrement())
 //   username  String?
@@ -93,16 +15,16 @@ enum Category {
 // }
 
 // model Product {
-//   id          Int      @id @default(autoincrement())
-//   name        String
-//   description String?
-//   price       Float
+//
+
+
 //   stock       Int
 //   createdAt   DateTime @default(now())
 //   updatedAt   DateTime @updatedAt
 //   orders      Order[]
 //   image       Image[]
 // }
+
 // model ProductVariant {
 //   id        Int     @id @default(autoincrement())
 //   product   Product @relation(fields: [productId], references: [id])
@@ -123,6 +45,7 @@ enum Category {
 //   comment   String?
 //   createdAt DateTime @default(now())
 // }
+8
 // model Image {
 //   id        Int     @id @default(autoincrement())
 //   url       String
@@ -130,6 +53,7 @@ enum Category {
 //   product   Product @relation(fields: [productId], references: [id])
 //   createdAt DateTime @default(now())
 // }
+
 // model Cart {
 //   id        Int       @id @default(autoincrement())
 //   user      User      @relation(fields: [userId], references: [id])
