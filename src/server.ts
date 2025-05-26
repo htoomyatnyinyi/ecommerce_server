@@ -1,25 +1,28 @@
 import express, { Express, Request, Response, NextFunction } from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
+import auth from "./routes/auth";
+import productRoutes from "./routes/product";
 
-import productRoutes from "./routes/productRoutes";
-import stockRoutes from "./routes/stockRoutes";
-import authRoutes from "./routes/authRoutes";
-
-import dotenv from "dotenv";
 import corsOptions from "./utils/corsOptions";
-
-dotenv.config();
+import { PORT } from "./utils/secrets";
 
 const app: Express = express();
-const PORT: number = parseInt(process.env.PORT || "8000");
+// const PORT: number = parseInt(process.env.PORT || "8000");
 
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(cookieParser());
 
 // Routes
+app.use("/api/auth", auth);
 app.use("/api/products", productRoutes);
-app.use("/api/stocks", stockRoutes);
-app.use("/api/auth", authRoutes);
+
+// --- Route for testing server ---
+app.get("/", (req: Request, res: Response) => {
+  console.log(req.body);
+  res.send("E-commerce API is running!");
+});
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

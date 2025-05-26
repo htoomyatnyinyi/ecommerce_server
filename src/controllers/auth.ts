@@ -134,3 +134,40 @@ export const signin = async (req: Request, res: Response): Promise<void> => {
     res.status(400).json({ error: error.message });
   }
 };
+
+export const authMe = async (req: Request, res: Response): Promise<any> => {
+  const user = req.user;
+  try {
+    res.json(user);
+  } catch (error: any) {
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
+  }
+};
+
+// export const me = async (req: Request, res: Response): Promise<any> => {
+//   res.status(200).json({ message: "HI FrOM Me No Verify Cookies" });
+// };
+
+export const signout = (req: Request, res: Response) => {
+  res.clearCookie("accessToken", {
+    httpOnly: true,
+    // secure: true,
+    secure: process.env.NODE_ENV === "production",
+    // sameSite: "None", // "Lax"
+    sameSite: "strict",
+    path: "/",
+  });
+
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    // secure: true,
+    secure: process.env.NODE_ENV === "production",
+    // sameSite: "None", // "Lax"
+    sameSite: "strict",
+    path: "/",
+  });
+
+  res.json({ message: "Logged out successfully" });
+};

@@ -15,57 +15,101 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+model User {
+  id        String    @id @default(uuid())
+  username  String?
+  email     String    @unique
+  password  String
+  role      Role      @default(USER)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  // RELATIONSHIPS
+  products  Product[] // mean user can have many product one to many
+}
+
 enum Role {
   ADMIN
   EMPLOYER
   USER
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
-  username      String?
-  email     String   @unique
-  password  String
-  products  Product[]
-  role      Role @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime? @updatedAt
-// NEED TO ADD CART AND ORDERS
-}
-
-
 model Product {
-  id          Int      @id @default(autoincrement())
+  id          String   @id  @default(uuid())
   title       String
-  description String?
-  price       Float
-  inStock     Boolean  @default(true)
-  category    Category @default(None)
-  stockId     Int?     // optional relation (nullable if not always linked)
-  stock       Stock?   @relation(fields: [stockId], references: [id])
-  userId      Int
-  user        User     @relation(fields: [userId], references: [id])
+  description String?  @db.Text
   createdAt   DateTime @default(now())
   updateAt    DateTime @updatedAt
+  
+  // FOREIGN KEY TO USER
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+
+  category  Category? @relation(fields: [categoryId], references: [id])
+  categoryId  String?
+
+  brand       Brand?    @relation(fields: [brandId], references: [id])
+  brandId     String?
+
+  // RELATIONSHIPS
+  variants  Variant[]
+  images    Image[]
 }
 
-model Stock {
-  id       Int       @id @default(autoincrement())
-  count Int @default(0)
-  category Category  @default(None)
-  product Product[]
+model Variant {
+  id    String    @id @default(uuid())
+  sku   String    @unique
+  price Decimal   @db.Decimal(10,2)
+  stock Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // FOREINGN KEY TO PRODUCT
+  product Product @relation(fields: [productId], references: [id])
+  productId String
+
+  // relateion key to variatnt_option
+  variantOptions VariantOption[]
+  // One-to-many relationship with VariantOption
+  // You might also have a direct 'image' field here if each variant has its own primary image
+  // imageUrl  String?
 }
 
-enum Category {
-  MacBookAir
-  MacBookPro
-  iPhone
-  iPad
-  AirPods
-  AppleWatchMini
-  AppleWatchPro
-  AppleWatchUltra
-  Accessories
-  None
+model VariantOption {
+  id  String @id @default(uuid())
+  attributeName String
+  attributeValue  String
+
+  // FOREIGN KEY TO VARIANT
+  variant Variant @relation(fields: [variantId], references: [id])
+  variantId String
+
+  @@unique([variantId, attributeName]) // Ensure only one value for an attribute per variant
 }
 
+
+model Image {
+  id          String @id @default(uuid())
+  url         String
+  altText     String
+  isPrimary   Boolean @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // FOREIGN KEY TO PRODUCT
+  product     Product @relation(fields: [productId], references: [id])
+  productId String
+}
+
+model Category   {
+  id  String @id  @default(uuid())
+  categoryName  String?  @unique
+  products  Product[]
+}
+
+model Brand {
+  id  String @id @default(uuid())
+  brandName String  @unique
+  products Product[]
+}

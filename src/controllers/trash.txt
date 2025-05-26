@@ -4,11 +4,12 @@ import { ProductRequestBody } from "../types";
 
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const { title, description, price, stockId, userId } =
+    const { title, description, price, userId } =
       req.body as ProductRequestBody;
     console.log(req.body);
+
     const product = await prisma.product.create({
-      data: { title, description, price, stockId, userId },
+      data: { title, description, price, userId },
     });
     res.status(201).json(product);
   } catch (error: any) {
