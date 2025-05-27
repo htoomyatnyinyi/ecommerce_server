@@ -32,7 +32,7 @@ const authenticated = async (
   const cookies = req.cookies as AuthCookies;
   const accessToken = cookies.e_hmnn;
 
-  console.log("authenticated - Cookies received:", req.cookies);
+  // console.log("authenticated - Cookies received:", req.cookies);
   if (!accessToken) {
     return await handleRefreshToken(req, res, next);
   }
@@ -40,7 +40,7 @@ const authenticated = async (
   try {
     const decoded = jwt.verify(accessToken, JWT_SECRET) as JwtPayload;
 
-    console.log("Token decoded successfully:", decoded);
+    // console.log("Token decoded successfully:", decoded);
 
     req.user = decoded; // ceck later
 
