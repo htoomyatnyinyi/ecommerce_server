@@ -77,7 +77,12 @@ export const signup = async (
   }
 };
 
-export const signin = async (req: Request, res: Response): Promise<void> => {
+import { UserSignInRequest } from "../types/authTypes";
+
+export const signin = async (
+  req: Request<{}, {}, UserSignInRequest>,
+  res: Response
+): Promise<any> => {
   try {
     const { email, password } = req.body;
 
