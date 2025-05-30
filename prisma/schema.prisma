@@ -1,13 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-
 generator client {
   provider = "prisma-client-js"
-  // output   = "../generated/prisma"
 }
 
 datasource db {
@@ -21,64 +13,69 @@ model User {
   email     String    @unique
   password  String
   role      Role      @default(USER)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   carts     Cart[]
   orders    Order[]
   products  Product[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-}
-
-enum Role {
-  ADMIN
-  USER
 }
 
 model Product {
-  id          String    @id @default(uuid())
+  id          String          @id @default(uuid())
   title       String
-  description String
-  // categoryId  String?
-  // brandId     String?
-  variants    Variant[]
-  images      Image[]
-  cartItems   CartItem[]
-  orderItems  OrderItem[]
-
+  description String          @db.Text
   userId      String
-  User        User      @relation(fields: [userId], references: [id])
-  categoryId  String? // link
-  Category    Category? @relation(fields: [categoryId], references: [id])
-  brandId     String? // link
-  Brand       Brand?    @relation(fields: [brandId], references: [id])
+  categoryId  String?
+  createdAt   DateTime        @default(now())
+  updateAt    DateTime        @updatedAt
+  cartItems   CartItem[]
+  images      Image[]
+  orderItems  OrderItem[]
+  Category    Category?       @relation(fields: [categoryId], references: [id])
+  User        User            @relation(fields: [userId], references: [id])
+  brand       ProductBrands[]
+  variants    Variant[]
 
-  createdAt   DateTime  @default(now())
-  updateAt    DateTime  @updatedAt
+  @@index([categoryId], map: "Product_categoryId_fkey")
+  @@index([userId], map: "Product_userId_fkey")
 }
 
+model ProductBrands {
+  productId String
+  brandId   String
+  brand     Brand   @relation(fields: [brandId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
 
-model Category   {
-  id  String @id  @default(uuid())
-  categoryName  String?  @unique
-  products  Product[]
+  @@id([productId, brandId])
+  @@index([brandId], map: "ProductBrands_brandId_fkey")
 }
 
 model Brand {
-  id  String @id @default(uuid())
-  brandName String  @unique
-  products Product[]
+  id        String          @id @default(uuid())
+  brandName BrandName       @unique
+  products  ProductBrands[]
 }
+
+model Category {
+  id           String       @id @default(uuid())
+  categoryName CategoryName @unique
+  products     Product[]
+}
+
 model Variant {
-  id             String         @id @default(uuid())
+  id             String          @id @default(uuid())
   sku            String
-  price          String
+  price          Decimal         @db.Decimal(10, 2)
   stock          Int
   productId      String
-  variantOptions VariantOption[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
   cartItems      CartItem[]
   orderItems     OrderItem[]
-  Product        Product        @relation(fields: [productId], references: [id])
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  Product        Product         @relation(fields: [productId], references: [id])
+  variantOptions VariantOption[]
+
+  @@index([productId], map: "Variant_productId_fkey")
 }
 
 model VariantOption {
@@ -86,9 +83,11 @@ model VariantOption {
   attributeName  String
   attributeValue String
   variantId      String
-  Variant        Variant  @relation(fields: [variantId], references: [id])
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  Variant        Variant  @relation(fields: [variantId], references: [id])
+
+  @@index([variantId], map: "VariantOption_variantId_fkey")
 }
 
 model Image {
@@ -97,18 +96,22 @@ model Image {
   altText   String
   isPrimary Boolean
   productId String
-  Product   Product  @relation(fields: [productId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  Product   Product  @relation(fields: [productId], references: [id])
+
+  @@index([productId], map: "Image_productId_fkey")
 }
 
 model Cart {
   id        String     @id @default(uuid())
   userId    String
-  items     CartItem[]
-  User      User       @relation(fields: [userId], references: [id])
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+  User      User       @relation(fields: [userId], references: [id])
+  items     CartItem[]
+
+  @@index([userId], map: "Cart_userId_fkey")
 }
 
 model CartItem {
@@ -117,22 +120,28 @@ model CartItem {
   productId String
   variantId String
   quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   Cart      Cart     @relation(fields: [cartId], references: [id])
   Product   Product  @relation(fields: [productId], references: [id])
   Variant   Variant  @relation(fields: [variantId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  @@index([cartId], map: "CartItem_cartId_fkey")
+  @@index([productId], map: "CartItem_productId_fkey")
+  @@index([variantId], map: "CartItem_variantId_fkey")
 }
 
 model Order {
   id         String      @id @default(uuid())
   userId     String
-  totalPrice Float
-  status     String      @default("pending")
-  items      OrderItem[]
-  User       User        @relation(fields: [userId], references: [id])
+  totalPrice Decimal     @db.Decimal(10, 2)
+  status     OrderStatus @default(PENDING)
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
+  User       User        @relation(fields: [userId], references: [id])
+  items      OrderItem[]
+
+  @@index([userId], map: "Order_userId_fkey")
 }
 
 model OrderItem {
@@ -141,13 +150,45 @@ model OrderItem {
   productId String
   variantId String
   quantity  Int
-  price     String
+  price     Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   Order     Order    @relation(fields: [orderId], references: [id])
   Product   Product  @relation(fields: [productId], references: [id])
   Variant   Variant  @relation(fields: [variantId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  @@index([orderId], map: "OrderItem_orderId_fkey")
+  @@index([productId], map: "OrderItem_productId_fkey")
+  @@index([variantId], map: "OrderItem_variantId_fkey")
 }
 
+enum Role {
+  ADMIN
+  USER
+}
 
+enum BrandName {
+  NIKE
+  ADIDAS
+  PUMA
+  REEBOK
+  UNDER_ARMOUR
+  OTHER
+}
 
+enum CategoryName {
+  SHOES
+  CLOTHING
+  ACCESSORIES
+  EQUIPMENT
+  ELECTRONICS
+  OTHER
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
