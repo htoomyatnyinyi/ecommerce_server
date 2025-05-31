@@ -2,23 +2,33 @@ import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import prisma from "../config/database";
+import {
+  UserSignInRequest,
+  UserSignUpRequest,
+  AuthMe,
+} from "../types/authTypes";
 
 const JWT_SECRET = process.env.JWT_SECRET || "htoomyat";
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 
-interface RegisterFormBody {
-  username: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  role: string;
-}
+// interface RegisterFormBody {
+//   username: string;
+//   email: string;
+//   password: string;
+//   confirmPassword: string;
+//   role: string;
+// }
+
+// interface UserSignInRequest {
+//   email: string;
+//   password: string;
+// }
 
 export const signup = async (
-  // req: Request, // req.body as RegisterFormBody method
-  req: Request<{}, {}, RegisterFormBody>,
+  req: Request<{}, {}, UserSignUpRequest>,
+  // req: Request<{}, {}, RegisterFormBody>,
   res: Response
-): Promise<void> => {
+): Promise<any> => {
   try {
     const { username, email, password, confirmPassword } = req.body;
 
@@ -76,8 +86,6 @@ export const signup = async (
     res.status(400).json({ error: error.message });
   }
 };
-
-import { UserSignInRequest } from "../types/authTypes";
 
 export const signin = async (
   req: Request<{}, {}, UserSignInRequest>,
@@ -140,8 +148,13 @@ export const signin = async (
   }
 };
 
-export const authMe = async (req: Request, res: Response): Promise<any> => {
+export const authMe = async (
+  req: Request<{}, AuthMe>,
+  res: Response<{}, AuthMe>
+): Promise<void> => {
   const user = req.user;
+  console.log(user);
+
   try {
     res.json(user);
   } catch (error: any) {

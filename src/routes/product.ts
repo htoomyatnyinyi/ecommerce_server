@@ -1,12 +1,10 @@
 import express from "express";
-import { createNewProduct, getProducts } from "../controllers/products/product";
 import { authenticated, permission } from "../middlewares/authMiddleware";
+import { createProduct, getProducts } from "../controllers/product";
 
 const router = express.Router();
 
-router.get("/all", getProducts);
-router.post("/", authenticated, createNewProduct);
-// router.get("/:id", authenticated, permission(["USER"]), getProductById);
-// router.delete("/:id", authenticated, permission(["USER"]), deleteProduct);
+router.get("/", getProducts);
+router.post("/", authenticated, createProduct);
 
 export default router;

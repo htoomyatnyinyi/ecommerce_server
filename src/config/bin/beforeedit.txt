@@ -1,0 +1,600 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  username      String         @unique
+  email         String         @unique
+  password      String
+  role          Role           @default(USER)
+  carts         Cart[]
+  orders        Order[]
+  addresses     Address[]
+  reviews       Review[]
+  products      Product[]      // Added: Opposite relation for Product
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Product {
+  id            String          @id @default(uuid())
+  title         String
+  description   String          @db.Text
+  variants      Variant[]
+  images        Image[]
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+  productBrands ProductBrands[]
+  reviews       Review[]
+  categoryId    String
+  category      Category?       @relation(fields: [categoryId], references: [id])
+  userId        String
+  user          User            @relation(fields: [userId], references: [id])
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  @@index([title])
+}
+
+model ProductBrands {
+  id        String      @id @default(uuid())
+  brandId   String
+  brand     Brand       @relation(fields: [brandId], references: [id])
+  productId String
+  product   Product     @relation(fields: [productId], references: [id])
+}
+
+model Brand {
+  id         String          @id @default(uuid())
+  brandName  String          @unique
+  productBrand ProductBrands[]
+}
+
+model Category {
+  id           String       @id @default(uuid())
+  categoryName String       @unique
+  products     Product[]
+}
+
+model Variant {
+  id             String          @id @default(uuid())
+  sku            String          @unique
+  price          Decimal         @db.Decimal(10, 2)
+  discountPrice  Decimal?        @db.Decimal(10, 2)
+  stock          Int
+  cartItems      CartItem[]
+  orderItems     OrderItem[]
+  productId      String
+  product        Product         @relation(fields: [productId], references: [id])
+  variantOptions VariantOption[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  @@index([sku])
+}
+
+model VariantOption {
+  id             String   @id @default(uuid())
+  attributeName  String
+  attributeValue String
+  variantId      String
+  variant        Variant  @relation(fields: [variantId], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Image {
+  id        String   @id @default(uuid())
+  url       String
+  altText   String
+  isPrimary Boolean  @default(false)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Cart {
+  id        String     @id @default(uuid())
+  items     CartItem[]
+  userId    String
+  user      User       @relation(fields: [userId], references: [id])
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  cartId    String
+  productId String
+  variantId String
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cart      Cart     @relation(fields: [cartId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+  variant   Variant  @relation(fields: [variantId], references: [id])
+}
+
+model Order {
+  id                String           @id @default(uuid())
+  userId            String
+  totalPrice        Decimal          @db.Decimal(10, 2)
+  status            OrderStatus      @default(PENDING)
+  shippingAddressId String?          
+  billingAddressId  String?          
+  paymentId         String?          @unique // Ensure one-to-one relation
+  shippingAddress   Address?         @relation(fields: [shippingAddressId], references: [id], name: "ShippingAddress")
+  billingAddress    Address?         @relation(fields: [billingAddressId], references: [id], name: "BillingAddress")
+  payment           Payment?         @relation(fields: [paymentId], references: [id])
+  items             OrderItem[]
+  user              User             @relation(fields: [userId], references: [id])
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  productId String
+  variantId String
+  quantity  Int
+  price     Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  order     Order    @relation(fields: [orderId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+  variant   Variant  @relation(fields: [variantId], references: [id])
+}
+
+model Address {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  street         String
+  city           String
+  state          String?
+  country        String
+  postalCode     String
+  isDefault      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  ordersShipping Order[]  @relation("ShippingAddress")
+  ordersBilling  Order[]  @relation("BillingAddress")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  rating    Int      @db.TinyInt
+  comment   String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+}
+
+model Payment {
+  id             String        @id @default(uuid())
+  orderId        String        @unique
+  amount         Decimal       @db.Decimal(10, 2)
+  paymentMethod  PaymentMethod
+  paymentStatus  PaymentStatus @default(PENDING)
+  transactionId  String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  order          Order?        @relation() // Removed fields and references
+}
+
+enum Role {
+  ADMIN
+  USER
+  SELLER
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  DEBIT_CARD
+  PAYPAL
+  BANK_TRANSFER
+  CASH_ON_DELIVERY
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  RETURNED
+}
+
+
+// generator client {
+//   provider = "prisma-client-js"
+// }
+
+// datasource db {
+//   provider = "mysql"
+//   url      = env("DATABASE_URL")
+// }
+
+// model User {
+//   id        String    @id @default(uuid())
+//   username  String
+//   email     String    @unique
+//   password  String
+//   role      Role      @default(USER)
+//   carts     Cart[]
+//   orders    Order[]
+//   products  Product[]
+//   createdAt DateTime  @default(now())
+//   updatedAt DateTime  @updatedAt
+// }
+
+// model Product {
+//   id          String          @id @default(uuid())
+//   title       String
+//   description String          @db.Text
+//   variants    Variant[]
+//   images      Image[]
+//   cartItems   CartItem[]
+//   orderItems  OrderItem[]
+//   productBrand       ProductBrands[]
+
+//   categoryId  String
+//   category    Category?       @relation(fields: [categoryId], references: [id])
+//   userId      String
+//   User        User            @relation(fields: [userId], references: [id])
+
+//   createdAt   DateTime        @default(now())
+//   updateAt    DateTime        @updatedAt
+// }
+
+// model ProductBrands {
+//   id    String      @id @default(uuid())
+//   brandId   String
+//   brand     Brand   @relation(fields: [brandId], references: [id])
+//   productId String
+//   product   Product @relation(fields: [productId], references: [id])
+// }
+
+// model Brand {
+//   id        String          @id @default(uuid())
+//   brandName BrandName       @unique
+//   productBrand  ProductBrands[]
+// }
+
+// model Category {
+//   id           String       @id @default(uuid())
+//   categoryName CategoryName @unique
+//   products     Product[]
+// }
+
+// model Variant {
+//   id             String          @id @default(uuid())
+//   sku            String
+//   price          Decimal         @db.Decimal(10, 2)
+//   stock          Int
+//   cartItems      CartItem[]
+//   orderItems     OrderItem[]
+//   productId      String
+//   Product        Product         @relation(fields: [productId], references: [id])
+//   variantOptions VariantOption[]
+//   createdAt      DateTime        @default(now())
+//   updatedAt      DateTime        @updatedAt
+
+// }
+
+// model VariantOption {
+//   id             String   @id @default(uuid())
+//   attributeName  String
+//   attributeValue String
+
+//   variantId      String
+//   Variant        Variant  @relation(fields: [variantId], references: [id])
+//   createdAt      DateTime @default(now())
+//   updatedAt      DateTime @updatedAt
+
+// }
+
+// model Image {
+//   id        String   @id @default(uuid())
+//   url       String
+//   altText   String
+//   isPrimary Boolean
+//   productId String
+//   Product   Product  @relation(fields: [productId], references: [id])
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+
+// }
+
+// model Cart {
+//   id        String     @id @default(uuid())
+//   items     CartItem[]
+//   userId    String
+//   User      User       @relation(fields: [userId], references: [id])
+//   createdAt DateTime   @default(now())
+//   updatedAt DateTime   @updatedAt
+
+// }
+
+// model CartItem {
+//   id        String   @id @default(uuid())
+//   cartId    String
+//   productId String
+//   variantId String
+//   quantity  Int
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+//   Cart      Cart     @relation(fields: [cartId], references: [id])
+//   Product   Product  @relation(fields: [productId], references: [id])
+//   Variant   Variant  @relation(fields: [variantId], references: [id])
+
+// }
+
+// model Order {
+//   id         String      @id @default(uuid())
+//   userId     String
+//   totalPrice Decimal     @db.Decimal(10, 2)
+//   status     OrderStatus @default(PENDING)
+//   createdAt  DateTime    @default(now())
+//   updatedAt  DateTime    @updatedAt
+//   User       User        @relation(fields: [userId], references: [id])
+//   items      OrderItem[]
+
+// }
+
+// model OrderItem {
+//   id        String   @id @default(uuid())
+//   orderId   String
+//   productId String
+//   variantId String
+//   quantity  Int
+//   price     Decimal  @db.Decimal(10, 2)
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+//   Order     Order    @relation(fields: [orderId], references: [id])
+//   Product   Product  @relation(fields: [productId], references: [id])
+//   Variant   Variant  @relation(fields: [variantId], references: [id])
+
+// }
+
+// enum Role {
+//   ADMIN
+//   USER
+// }
+
+// enum BrandName {
+//   NIKE
+//   ADIDAS
+//   PUMA
+//   REEBOK
+//   UNDER_ARMOUR
+//   OTHER
+// }
+
+// enum CategoryName {
+//   SHOES
+//   CLOTHING
+//   ACCESSORIES
+//   EQUIPMENT
+//   ELECTRONICS
+//   OTHER
+// }
+
+// enum OrderStatus {
+//   PENDING
+//   PROCESSING
+//   SHIPPED
+//   DELIVERED
+//   CANCELLED
+// }
+// // generator client {
+// //   provider = "prisma-client-js"
+// // }
+
+// // datasource db {
+// //   provider = "mysql"
+// //   url      = env("DATABASE_URL")
+// // }
+
+// // model User {
+// //   id        String    @id @default(uuid())
+// //   username  String
+// //   email     String    @unique
+// //   password  String
+// //   role      Role      @default(USER)
+// //   createdAt DateTime  @default(now())
+// //   updatedAt DateTime  @updatedAt
+// //   carts     Cart[]
+// //   orders    Order[]
+// //   products  Product[]
+// // }
+
+// // model Product {
+// //   id          String          @id @default(uuid())
+// //   title       String
+// //   description String          @db.Text
+// //   userId      String
+// //   categoryId  String?
+// //   createdAt   DateTime        @default(now())
+// //   updateAt    DateTime        @updatedAt
+// //   cartItems   CartItem[]
+// //   images      Image[]
+// //   orderItems  OrderItem[]
+// //   category    Category?       @relation(fields: [categoryId], references: [id])
+// //   User        User            @relation(fields: [userId], references: [id])
+// //   brand       ProductBrands[]
+// //   variants    Variant[]
+
+// //   @@index([categoryId], map: "Product_categoryId_fkey")
+// //   @@index([userId], map: "Product_userId_fkey")
+// // }
+
+// // model ProductBrands {
+// //   productId String
+// //   brandId   String
+// //   brand     Brand   @relation(fields: [brandId], references: [id])
+// //   product   Product @relation(fields: [productId], references: [id])
+
+// //   @@id([productId, brandId])
+// //   @@index([brandId], map: "ProductBrands_brandId_fkey")
+// // }
+
+// // model Brand {
+// //   id        String          @id @default(uuid())
+// //   brandName BrandName       @unique
+// //   products  ProductBrands[]
+// // }
+
+// // model Category {
+// //   id           String       @id @default(uuid())
+// //   categoryName CategoryName @unique
+// //   products     Product[]
+// // }
+
+// // model Variant {
+// //   id             String          @id @default(uuid())
+// //   sku            String
+// //   price          Decimal         @db.Decimal(10, 2)
+// //   stock          Int
+// //   productId      String
+// //   createdAt      DateTime        @default(now())
+// //   updatedAt      DateTime        @updatedAt
+// //   cartItems      CartItem[]
+// //   orderItems     OrderItem[]
+// //   Product        Product         @relation(fields: [productId], references: [id])
+// //   variantOptions VariantOption[]
+
+// //   @@index([productId], map: "Variant_productId_fkey")
+// // }
+
+// // model VariantOption {
+// //   id             String   @id @default(uuid())
+// //   attributeName  String
+// //   attributeValue String
+// //   variantId      String
+// //   createdAt      DateTime @default(now())
+// //   updatedAt      DateTime @updatedAt
+// //   Variant        Variant  @relation(fields: [variantId], references: [id])
+
+// //   @@index([variantId], map: "VariantOption_variantId_fkey")
+// // }
+
+// // model Image {
+// //   id        String   @id @default(uuid())
+// //   url       String
+// //   altText   String
+// //   isPrimary Boolean
+// //   productId String
+// //   createdAt DateTime @default(now())
+// //   updatedAt DateTime @updatedAt
+// //   Product   Product  @relation(fields: [productId], references: [id])
+
+// //   @@index([productId], map: "Image_productId_fkey")
+// // }
+
+// // model Cart {
+// //   id        String     @id @default(uuid())
+// //   userId    String
+// //   createdAt DateTime   @default(now())
+// //   updatedAt DateTime   @updatedAt
+// //   User      User       @relation(fields: [userId], references: [id])
+// //   items     CartItem[]
+
+// //   @@index([userId], map: "Cart_userId_fkey")
+// // }
+
+// // model CartItem {
+// //   id        String   @id @default(uuid())
+// //   cartId    String
+// //   productId String
+// //   variantId String
+// //   quantity  Int
+// //   createdAt DateTime @default(now())
+// //   updatedAt DateTime @updatedAt
+// //   Cart      Cart     @relation(fields: [cartId], references: [id])
+// //   Product   Product  @relation(fields: [productId], references: [id])
+// //   Variant   Variant  @relation(fields: [variantId], references: [id])
+
+// //   @@index([cartId], map: "CartItem_cartId_fkey")
+// //   @@index([productId], map: "CartItem_productId_fkey")
+// //   @@index([variantId], map: "CartItem_variantId_fkey")
+// // }
+
+// // model Order {
+// //   id         String      @id @default(uuid())
+// //   userId     String
+// //   totalPrice Decimal     @db.Decimal(10, 2)
+// //   status     OrderStatus @default(PENDING)
+// //   createdAt  DateTime    @default(now())
+// //   updatedAt  DateTime    @updatedAt
+// //   User       User        @relation(fields: [userId], references: [id])
+// //   items      OrderItem[]
+
+// //   @@index([userId], map: "Order_userId_fkey")
+// // }
+
+// // model OrderItem {
+// //   id        String   @id @default(uuid())
+// //   orderId   String
+// //   productId String
+// //   variantId String
+// //   quantity  Int
+// //   price     Decimal  @db.Decimal(10, 2)
+// //   createdAt DateTime @default(now())
+// //   updatedAt DateTime @updatedAt
+// //   Order     Order    @relation(fields: [orderId], references: [id])
+// //   Product   Product  @relation(fields: [productId], references: [id])
+// //   Variant   Variant  @relation(fields: [variantId], references: [id])
+
+// //   @@index([orderId], map: "OrderItem_orderId_fkey")
+// //   @@index([productId], map: "OrderItem_productId_fkey")
+// //   @@index([variantId], map: "OrderItem_variantId_fkey")
+// // }
+
+// // enum Role {
+// //   ADMIN
+// //   USER
+// // }
+
+// // enum BrandName {
+// //   NIKE
+// //   ADIDAS
+// //   PUMA
+// //   REEBOK
+// //   UNDER_ARMOUR
+// //   OTHER
+// // }
+
+// // enum CategoryName {
+// //   SHOES
+// //   CLOTHING
+// //   ACCESSORIES
+// //   EQUIPMENT
+// //   ELECTRONICS
+// //   OTHER
+// // }
+
+// // enum OrderStatus {
+// //   PENDING
+// //   PROCESSING
+// //   SHIPPED
+// //   DELIVERED
+// //   CANCELLED
+// // }
