@@ -67,7 +67,7 @@ model Variant {
   sku            String          @unique
   price          Decimal         @db.Decimal(10, 2)
   discountPrice  Decimal?        @db.Decimal(10, 2)
-  stock          Int
+  stock          Int?
   cartItems      CartItem[]
   orderItems     OrderItem[]
   productId      String
@@ -82,6 +82,7 @@ model VariantOption {
   id             String   @id @default(uuid())
   attributeName  String
   attributeValue String
+  attributeStock Int?
   variantId      String
   variant        Variant  @relation(fields: [variantId], references: [id])
   createdAt      DateTime @default(now())

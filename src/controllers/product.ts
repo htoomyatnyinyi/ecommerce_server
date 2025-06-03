@@ -1,14 +1,161 @@
 import { Request, Response } from "express";
 import prisma from "../config/database";
+import {
+  ProductRequest,
+  VariantOptionRequest,
+  VariantRequest,
+} from "../types/productTypes";
 
-export const createProduct = async (
-  req: Request,
-  res: Response
-): Promise<any> => {
-  res.send("Hi");
-};
+// export const createProduct = async (
+//   req: Request<{}, {}, ProductRequest>,
+//   res: Response
+// ): Promise<any> => {
+//   //
+//   const userId = req.user?.id;
+
+//   const { title, description, variants, images } = req.body;
+//   console.log(userId, req.body, "middleware");
+
+//   try {
+//     const productResponse = await prisma.product.create({
+//       data: {
+//         title,
+//         description,
+//         user: {
+//           connect: { id: userId },
+//         },
+//         variants: {
+//           create: variants.map((variant): any => ({
+//             sku: variant.sku,
+//             price: variant.price,
+//             stock: variant.stock,
+//             discountPrice: variant.discountPrice,
+//             variantOptions: {
+//               create: variant.variantOptions
+//                 ? variant.variantOptions.map((variantOption): any => ({
+//                     attributeName: variantOption.attributeName,
+//                     attributeValue: variantOption.attributeValue,
+//                   }))
+//                 : [],
+//             },
+//             images: {
+//               create: {
+//                 images: images?.map((image) => ({
+//                   url: image.url,
+//                   altText: image.altText,
+//                   isPrimary: image.isPrimary,
+//                 })),
+//               },
+//             },
+//             // images: images?.map((image) => ({
+//             //   url: image.url,
+//             //   altText: image.altText,
+//             //   isPrimary: image.isPrimary,
+//             // })),
+//             // categoryId: "fkalfjeklfjelwf",
+//             // userId, // may be no need
+//           })),
+//         },
+//       },
+//       include: {
+//         variants: {
+//           include: {
+//             variantOptions: true, // Include variant options in response
+//           },
+//         },
+//         images: true,
+//       },
+//     });
+//     res.status(201).json({ messag: "success", productResponse });
+//   } catch (error) {
+//     console.error("Error fetching products:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Failed to fetch products",
+//       error: process.env.NODE_ENV === "dewwwvelopment" ? error : undefined,
+//     });
+//   }
+// };
 
 // Query parameters interface
+
+export const createProduct = async (
+  req: Request<{}, {}, ProductRequest>,
+  res: Response
+): Promise<any> => {
+  // MIDDLEWARE ID
+  const userId = req.user?.id;
+
+  console.log(userId, " middlewareid");
+
+  const { title, description, variants, images, categoryId } = req.body;
+
+  try {
+    const insertedResponse = await prisma.product.create({
+      data: {
+        title,
+        description,
+        variants: {
+          create: variants?.map((variant: VariantRequest): any => ({
+            sku: variant.sku,
+            price: variant.price,
+            discountPrice: variant.discountPrice,
+            stock: variant.stock,
+            variantOptions: {
+              create: variant.variantOptions.map(
+                (variantOption: VariantOptionRequest): any => ({
+                  attributeName: variantOption.attributeName,
+                  attributeValue: variantOption.attributeValue,
+                  attributeStock: variantOption.attributeStock,
+                })
+              ),
+            },
+          })),
+        },
+        images: {
+          create: images?.map((image) => ({
+            url: image.url,
+            altText: image.altText,
+            isPrimary: image.isPrimary,
+          })),
+        },
+        category: {
+          connect: { id: categoryId },
+        },
+        user: {
+          connect: { id: userId },
+        },
+      },
+      include: {
+        variants: {
+          include: {
+            variantOptions: true,
+          },
+        },
+        images: true,
+      },
+    });
+
+    res.status(201).json({ mesage: "inserted", insertedResponse });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+//  create: variants.map((variant: VariantRequest):any => ({
+//             sku: variant.sku,
+//             price:variant.price,
+//             discountPrice: variant.discountPrice,
+//             stock: variant.stock,
+//             variantOptions: {
+//               create:  variantOptions.map((variantOption: VariantOptionRequest): any=> ({
+//                 attributeName: variantOption.attributeName,
+//                 attributeValue: variantOption.attributeValue,
+//                 attributeStock: variantOption.attributeStock
+//               }))
+//             }
+//           })))
+
 interface GetProductsQuery {
   page?: string;
   limit?: string;

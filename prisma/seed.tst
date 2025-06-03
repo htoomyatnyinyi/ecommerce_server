@@ -3,9 +3,11 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Clear existing data (optional)
+  await prisma.stockHistory.deleteMany();
   await prisma.image.deleteMany();
   await prisma.variant.deleteMany();
   await prisma.product.deleteMany();
+  await prisma.tag.deleteMany();
   await prisma.category.deleteMany();
   await prisma.user.deleteMany();
 

@@ -41,12 +41,13 @@ export interface ProductsQuery {
 }
 
 export interface ProductRequest {
-  userId: string | undefined; // do no knmow due to varient create errror
+  // userId: string | undefined; // do no knmow due to varient create errror
   title: string;
   description: string;
   variants: VariantRequest[];
   images?: ImageRequest[];
-  categoryId: string;
+  // categoryId?: string | undefined;
+  categoryId?: string;
   brandIds?: string[];
 }
 
@@ -55,12 +56,13 @@ export interface VariantRequest {
   price: number | string;
   discountPrice?: number | string;
   stock: number | string;
-  variantOptions?: VariantOptionRequest[];
+  variantOptions: VariantOptionRequest[];
 }
 
 export interface VariantOptionRequest {
   attributeName: string;
   attributeValue: string;
+  attributeStock: number;
 }
 
 export interface ImageRequest {
@@ -125,6 +127,10 @@ export interface UserRequest {
   email: string;
   password: string;
   role?: Role;
+}
+
+export interface CategoryRequest {
+  categoryId: string;
 }
 
 // export enum Role {

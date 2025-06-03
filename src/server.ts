@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import auth from "./routes/auth";
 import productRoutes from "./routes/product";
 import cartRoutes from "./routes/cart";
+import categoryRoutes from "./routes/category";
 
 import corsOptions from "./utils/corsOptions";
 import { PORT } from "./utils/secrets";
@@ -19,6 +20,7 @@ app.use(cookieParser());
 app.use("/api/auth", auth);
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/category", categoryRoutes);
 
 // --- Route for testing server ---
 app.get("/", (req: Request, res: Response) => {
