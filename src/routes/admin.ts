@@ -1,0 +1,44 @@
+import express from "express";
+import { authenticated } from "../middlewares/authMiddleware";
+import {
+  createAccount,
+  getAccount,
+  updateAccount,
+  deleteAccount,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  getProducts,
+  getProductById,
+  getCart,
+  updateCart,
+  deleteCart,
+  getOrder,
+  updateOrder,
+  deleteOrder,
+} from "../controllers/dashboard/admin";
+
+const router = express.Router();
+
+router.use(authenticated);
+
+router.post("/account", createAccount);
+router.get("/accounts", getAccount);
+router.put("/account/:id", updateAccount);
+router.delete("/account/:id", deleteAccount);
+
+router.post("/product", createProduct);
+router.get("/products", getProducts);
+router.get("/product/:id", updateProduct);
+router.get("/product/:id", getProductById);
+router.delete("/product/:id", deleteProduct);
+
+router.get("/cart", getCart);
+router.put("/cart/:id", updateCart);
+router.delete("/cart/:id", deleteCart);
+
+router.get("/order", getOrder);
+router.put("/order/:id", updateOrder);
+router.delete("/order/:id", deleteOrder);
+
+export default router;

@@ -1,13 +1,15 @@
 import express, { Express, Request, Response, NextFunction } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import auth from "./routes/auth";
-import productRoutes from "./routes/product";
-import cartRoutes from "./routes/cart";
-import categoryRoutes from "./routes/category";
 
 import corsOptions from "./utils/corsOptions";
 import { PORT } from "./utils/secrets";
+
+import auth from "./routes/auth";
+import product from "./routes/product";
+import cart from "./routes/cart";
+import category from "./routes/category";
+import admin from "./routes/admin";
 
 const app: Express = express();
 // const PORT: number = parseInt(process.env.PORT || "8000");
@@ -18,14 +20,15 @@ app.use(cookieParser());
 
 // Routes
 app.use("/api/auth", auth);
-app.use("/api/products", productRoutes);
-app.use("/api/cart", cartRoutes);
-app.use("/api/category", categoryRoutes);
+app.use("/api/admin", admin);
+app.use("/api/products", product);
+app.use("/api/cart", cart);
+app.use("/api/category", category);
 
 // --- Route for testing server ---
 app.get("/", (req: Request, res: Response) => {
   console.log(req.body);
-  res.send("E-commerce API is running!");
+  res.send("API is running!");
 });
 
 // Error handling middleware

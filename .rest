@@ -28,6 +28,8 @@ GET /products?search=shirt&category=clothing&minPrice=10&maxPrice=50
 GET /products?sortBy=price&sortOrder=asc
 ###
 
+GET http://localhost:8080/api/admin
+###
 GET http://localhost:8080/api/products
 ###
 POST  http://localhost:8080/api/products
@@ -40,7 +42,7 @@ Content-Type: application/json
   "categoryId": "12fa1139-79ec-4fa7-8294-c35afdd75893",
   "variants": [
     {
-      "sku": "SKU-A3",
+      "sku": "SKU-A2",
       "price": 189.9,
       "stock": 100,
       "variantOptions": [
