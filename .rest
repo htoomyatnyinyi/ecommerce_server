@@ -1,0 +1,151 @@
+
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "username": "hmnn4",
+  "email": "hmnn3@mail.com",
+  "bio": "This is my Bio",
+  "password": "htoo",
+  "confirmPassword": "htoo"
+}
+###
+POST http://localhost:8080/api/auth/signout
+###
+GET http://localhost:8080/api/auth/authme
+###
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "hmnn3@mail.com",
+  "password": "htoo"
+}
+
+###
+GET /products?page=2&limit=5
+GET /products?search=shirt&category=clothing&minPrice=10&maxPrice=50
+GET /products?sortBy=price&sortOrder=asc
+###
+
+GET http://localhost:8080/api/products
+###
+POST  http://localhost:8080/api/products
+Content-Type: application/json
+
+{
+  "title": "T-Shirt",
+  "description": "80% cotton and 20% nilon",
+  "brandName": "HMNN1",
+  "categoryId": "12fa1139-79ec-4fa7-8294-c35afdd75893",
+  "variants": [
+    {
+      "sku": "SKU-A3",
+      "price": 189.9,
+      "stock": 100,
+      "variantOptions": [
+        {
+          "attributeName": "size",
+          "attributeValue": "sm",
+          "attributeStock": 10
+        },
+        {
+          "attributeName": "size",
+          "attributeValue": "md",
+          "attributeStock": 11
+
+        },
+        {
+          "attributeName": "size",
+          "attributeValue": "lg",
+          "attributeStock": 12
+        },
+        {
+          "attributeName": "size",
+          "attributeValue": "xl",
+          "attributeStock": 13
+        },
+        {
+          "attributeName": "size",
+          "attributeValue": "xxl",
+          "attributeStock": 14
+        }
+      ]
+    }
+  ],
+  "images": [
+    {
+      "url": "https://images.pexels.com/photos/325044/pexels-photo-325044.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+      "altText": "Product image",
+      "isPrimary": true
+    },
+    {
+      "url": "https://images.pexels.com/photos/1379640/pexels-photo-1379640.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+      "altText": "Product image",
+      "isPrimary": false
+    }
+  ]
+}
+
+
+###
+GET http://localhost:8080/api/post
+###
+POST http://localhost:8080/api/post/user
+Content-Type: application/json
+
+{
+  "username": "hmnn334",
+  "email": "hmnn333@mail.com",
+  "bio": "This is my Bio",
+  "password": "htoo",
+  "post": [
+    {
+      "content": "My first post!"
+    },
+    {
+      "content": "My second post!"
+    }
+  ],
+  "comment"
+}
+
+###
+POST http://localhost:8080/api/post/user
+Content-Type: application/json
+
+{
+  "username": "hmnn41",
+  "email": "hmnn13@mail.com",
+  "bio": "This is my Bio",
+  "password": "htoo",
+  "confirmPassword": "htoo"
+}
+###
+GET http://localhost:8080/api/post
+###
+POST http://localhost:8080/api/post/comment
+Content-Type: application/json
+
+{
+  "comment": "Hi From Comment33",
+  "postId": "f99f4011-cee7-4381-a6f5-64c99e828b3e"
+}
+###
+PUT http://localhost:8080/api/post/comment/01JWK3PF5HBQ9RHZ3H3XGH01G2
+Content-Type: application/json
+
+{
+  "commentId": "01JWK3PF5HBQ9RHZ3H3XGH01G2",
+  "comment": "This is update comment version"
+}
+
+###
+GET http://localhost:8080/api/category/
+###
+POST http://localhost:8080/api/category
+Content-Type: application/json
+
+{
+  "categoryName": "Bag"
+}
