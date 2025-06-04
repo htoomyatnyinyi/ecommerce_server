@@ -3,11 +3,11 @@ POST http://localhost:8080/api/auth/signup
 Content-Type: application/json
 
 {
-  "username": "hmnn4",
-  "email": "hmnn3@mail.com",
+  "username": "hmnn43",
+  "email": "hmnn33@mail.com",
   "bio": "This is my Bio",
-  "password": "htoo",
-  "confirmPassword": "htoo"
+  "password": "htoomyat",
+  "confirmPassword": "htoomyat"
 }
 ###
 POST http://localhost:8080/api/auth/signout
@@ -18,8 +18,8 @@ POST http://localhost:8080/api/auth/signin
 Content-Type: application/json
 
 {
-  "email": "hmnn3@mail.com",
-  "password": "htoo"
+  "email": "hmnn33@mail.com",
+  "password": "htoomyat"
 }
 
 ###
@@ -39,7 +39,7 @@ Content-Type: application/json
   "title": "T-Shirt",
   "description": "80% cotton and 20% nilon",
   "brandName": "HMNN1",
-  "categoryId": "12fa1139-79ec-4fa7-8294-c35afdd75893",
+  "categoryId": "e0f43400-15e8-4009-a5cc-73f32b3473bb",
   "variants": [
     {
       "sku": "SKU-A2",
@@ -149,5 +149,16 @@ POST http://localhost:8080/api/category
 Content-Type: application/json
 
 {
-  "categoryName": "Bag"
+  "categoryName": "Shoe"
+}
+
+###
+GET http://localhost:8080/api/brand
+
+###
+POST http:/localhost:8080/api/brand
+Content-Type: application/json
+
+{
+  "brandName": "HTOO MYAT NYI NYI"
 }

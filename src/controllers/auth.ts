@@ -30,7 +30,7 @@ export const signup = async (
   res: Response
 ): Promise<any> => {
   try {
-    const { username, email, password, confirmPassword } = req.body;
+    const { username, email, password, confirmPassword, role } = req.body;
 
     if (password !== confirmPassword) {
       res.status(400).json({ error: "Passwords do not match" });
