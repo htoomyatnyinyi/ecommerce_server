@@ -1,26 +1,3 @@
-/**
- * Model User
- */
-// export type User = {
-//   id: string;
-//   username: string;
-//   email: string;
-//   password: string;
-//   role: Role;
-//   createdAt: Date;
-//   updatedAt: Date;
-// };
-
-// export interface UserRequest {
-//   username: string;
-//   email: string;
-//   password: string;
-//   confirmPassword: string;
-//   role: Role;
-// }
-
-// req: Request<{}, {}, RegisterFormBody>,
-
 export enum Role {
   ADMIN = "ADMIN",
   USER = "USER",
@@ -39,14 +16,15 @@ export interface UserSignUpRequest {
   role: Role;
 }
 
-// export interface AuthMeResponse {
-//   id: string;
-//   email: string;
-//   role: Role;
-//   iat: number;
-//   exp: number;
-// }
+export interface AuthMeResponse {
+  id: string;
+  email: string;
+  role: Role;
+  iat: number;
+  exp: number;
+}
 export interface AuthMe {
+  // request
   id: string;
   email: string;
   role: Role;

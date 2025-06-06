@@ -20,7 +20,7 @@ app.use(cookieParser());
 
 // Routes
 app.use("/api/auth", auth);
-app.use("/api/admin", admin);
+app.use("/admin", admin);
 app.use("/api/products", product);
 app.use("/api/cart", cart);
 app.use("/api/category", category);
@@ -28,7 +28,7 @@ app.use("/api/category", category);
 // --- Route for testing server ---
 app.get("/", (req: Request, res: Response) => {
   console.log(req.body);
-  res.send("API is running!");
+  res.send("API is running now!");
 });
 
 // Error handling middleware

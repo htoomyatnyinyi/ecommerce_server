@@ -23,6 +23,7 @@ model User {
   updatedAt     DateTime       @updatedAt
 }
 
+
 model Product {
   id            String          @id @default(uuid())
   title         String
@@ -33,7 +34,7 @@ model Product {
   orderItems    OrderItem[]
   productBrands ProductBrands[]
   reviews       Review[]
-  categoryId    String
+  categoryId    String // at user input form generate with list if already create or create actjio0n there.
   category      Category?       @relation(fields: [categoryId], references: [id])
   userId        String
   user          User            @relation(fields: [userId], references: [id])
@@ -49,6 +50,7 @@ model ProductBrands {
   productId String
   product   Product     @relation(fields: [productId], references: [id])
 }
+
 
 model Brand {
   id         String          @id @default(uuid())
@@ -196,7 +198,7 @@ model Payment {
 enum Role {
   ADMIN
   USER
-  SELLER
+  EMPLOYER
 }
 
 enum PaymentMethod {

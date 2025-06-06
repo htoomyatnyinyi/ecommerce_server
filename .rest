@@ -1,31 +1,86 @@
 
+GET http://localhost:8080/
+
+###
+POST http://localhost:8080/admin/account 
+Content-Type: application/json
+
+{
+  "username": "hmnn21",
+  "email": "hmnn122@mail.com",
+  "bio": "This is my Bio",
+  "password": "htoomyat",
+  "confirmPassword": "htoomyat",
+  "role": "ADMIN"
+}
+
+###
 POST http://localhost:8080/api/auth/signup
 Content-Type: application/json
 
 {
-  "username": "hmnn43",
-  "email": "hmnn33@mail.com",
+  "username": "hmnn1",
+  "email": "hmnn1@mail.com",
   "bio": "This is my Bio",
   "password": "htoomyat",
   "confirmPassword": "htoomyat"
 }
-###
-POST http://localhost:8080/api/auth/signout
+
 ###
 GET http://localhost:8080/api/auth/authme
+
 ###
 POST http://localhost:8080/api/auth/signin
 Content-Type: application/json
 
 {
-  "email": "hmnn33@mail.com",
+  "email": "hmnn3@mail.com",
   "password": "htoomyat"
 }
+
+###
+POST http://localhost:8080/api/auth/signout
+
+###
+GET http://localhost:8080/admin/accounts
+
+###
+PUT http://localhost:8080/admin/account/ddc481d4-bc09-414d-bd53-bff26f199532
+# PUT http://localhost:8080/admin/account
+Content-Type: application/json
+
+{
+  "role": "ADMIN" 
+}
+
+###
+DELETE http://localhost:8080/admin/account/ddc481d4-bc09-414d-bd53-bff26f199532
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ###
 GET /products?page=2&limit=5
 GET /products?search=shirt&category=clothing&minPrice=10&maxPrice=50
 GET /products?sortBy=price&sortOrder=asc
+###
+
+###
 ###
 
 GET http://localhost:8080/api/admin
@@ -42,7 +97,7 @@ Content-Type: application/json
   "categoryId": "e0f43400-15e8-4009-a5cc-73f32b3473bb",
   "variants": [
     {
-      "sku": "SKU-A2",
+      "sku": "SKU-A21",
       "price": 189.9,
       "stock": 100,
       "variantOptions": [
@@ -149,7 +204,7 @@ POST http://localhost:8080/api/category
 Content-Type: application/json
 
 {
-  "categoryName": "Shoe"
+  "categoryName": "TV"
 }
 
 ###
@@ -160,5 +215,5 @@ POST http:/localhost:8080/api/brand
 Content-Type: application/json
 
 {
-  "brandName": "HTOO MYAT NYI NYI"
+  "brandName": "Bag"
 }

@@ -6,23 +6,10 @@ import {
   UserSignInRequest,
   UserSignUpRequest,
   AuthMe,
+  AuthMeResponse,
 } from "../types/authTypes";
 
-const JWT_SECRET = process.env.JWT_SECRET || "htoomyat";
-const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
-
-// interface RegisterFormBody {
-//   username: string;
-//   email: string;
-//   password: string;
-//   confirmPassword: string;
-//   role: string;
-// }
-
-// interface UserSignInRequest {
-//   email: string;
-//   password: string;
-// }
+import { COOKIE_MAX_AGE, JWT_SECRET } from "../utils/secrets";
 
 export const signup = async (
   req: Request<{}, {}, UserSignUpRequest>,
@@ -150,7 +137,7 @@ export const signin = async (
 
 export const authMe = async (
   req: Request<{}, AuthMe>,
-  res: Response<{}, AuthMe>
+  res: Response<{}, AuthMeResponse>
 ): Promise<void> => {
   const user = req.user;
   console.log(user);

@@ -2,7 +2,7 @@ import express from "express";
 import { authenticated } from "../middlewares/authMiddleware";
 import {
   createAccount,
-  getAccount,
+  getAccounts,
   updateAccount,
   deleteAccount,
   createProduct,
@@ -23,7 +23,8 @@ const router = express.Router();
 router.use(authenticated);
 
 router.post("/account", createAccount);
-router.get("/accounts", getAccount);
+router.get("/accounts", getAccounts);
+router.put("/account", updateAccount);
 router.put("/account/:id", updateAccount);
 router.delete("/account/:id", deleteAccount);
 
