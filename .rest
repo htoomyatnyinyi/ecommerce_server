@@ -11,7 +11,7 @@ Content-Type: application/json
   "bio": "This is my Bio",
   "password": "htoomyat",
   "confirmPassword": "htoomyat",
-  "role": "ADMIN"
+  "role": "USER"
 }
 
 ###
@@ -19,22 +19,30 @@ POST http://localhost:8080/api/auth/signup
 Content-Type: application/json
 
 {
-  "username": "hmnn1",
-  "email": "hmnn1@mail.com",
+  "username": "test",
+  "email": "cirifel663@2mik.com",
   "bio": "This is my Bio",
   "password": "htoomyat",
   "confirmPassword": "htoomyat"
 }
+###
+POST http://localhost:8080/api/auth/reset-password-request
+Content-Type: application/json
+
+{
+  "email": "cirifel663@2mik.com"
+}
 
 ###
 GET http://localhost:8080/api/auth/authme
+
 
 ###
 POST http://localhost:8080/api/auth/signin
 Content-Type: application/json
 
 {
-  "email": "hmnn3@mail.com",
+  "email": "cirifel663@2mik.com",
   "password": "htoomyat"
 }
 
