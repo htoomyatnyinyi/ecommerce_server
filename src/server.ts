@@ -11,8 +11,10 @@ import cart from "./routes/cart";
 import category from "./routes/category";
 import admin from "./routes/admin";
 
+// import prisma from "./config/database";
+// import { verifyEmail } from "./controllers/auth";
+
 const app: Express = express();
-// const PORT: number = parseInt(process.env.PORT || "8000");
 
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -24,6 +26,8 @@ app.use("/admin", admin);
 app.use("/api/products", product);
 app.use("/api/cart", cart);
 app.use("/api/category", category);
+
+// app.get("/verify-email", verifyEmail);
 
 // --- Route for testing server ---
 app.get("/", (req: Request, res: Response) => {

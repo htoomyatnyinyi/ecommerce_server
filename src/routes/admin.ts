@@ -17,6 +17,7 @@ import {
   updateOrder,
   deleteOrder,
 } from "../controllers/dashboard/admin";
+// import { verifyEmail } from "../controllers/auth";
 
 const router = express.Router();
 
@@ -24,6 +25,7 @@ router.use(authenticated);
 
 router.post("/account", createAccount);
 router.get("/accounts", getAccounts);
+// router.get("verify-email", verifyEmail);
 router.put("/account", updateAccount);
 router.put("/account/:id", updateAccount);
 router.delete("/account/:id", deleteAccount);

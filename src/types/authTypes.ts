@@ -1,19 +1,21 @@
 export enum Role {
   ADMIN = "ADMIN",
+  EMPLOYER = "EMPLOYER",
   USER = "USER",
 }
-export interface UserSignInRequest {
+export interface SignInRequest {
   email: string;
   password: string;
 }
 
-export interface UserSignUpRequest {
+export interface SignUpRequest {
   username: string;
   email: string;
   password: string;
   confirmPassword: string;
   // role: "ADMIN" | "USER";
   role: Role;
+  isEmailVerified: boolean;
 }
 
 export interface AuthMeResponse {

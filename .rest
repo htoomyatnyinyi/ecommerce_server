@@ -13,13 +13,15 @@ Content-Type: application/json
   "confirmPassword": "htoomyat",
   "role": "USER"
 }
+###
+GET http://localhost:8080/verify-email?token=lfkejflk
 
 ###
 POST http://localhost:8080/api/auth/signup
 Content-Type: application/json
 
 {
-  "username": "test",
+  "username": "test1",
   "email": "cirifel663@2mik.com",
   "bio": "This is my Bio",
   "password": "htoomyat",
@@ -62,7 +64,7 @@ Content-Type: application/json
 }
 
 ###
-DELETE http://localhost:8080/admin/account/ddc481d4-bc09-414d-bd53-bff26f199532
+DELETE http://localhost:8080/admin/account/2b136452-67cd-43e4-8e80-c2763b10e961
 
 
 
