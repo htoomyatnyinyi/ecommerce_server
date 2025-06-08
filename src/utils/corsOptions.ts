@@ -1,6 +1,8 @@
-// // CORS Configuration
+import { FRONTEND_URL } from "./secrets";
+
+// CORS Configuration
 // const corsOptions = {
-//   origin: process.env.FRONTEND_URL || "http://localhost:5173", // Replace with your frontend URL
+//   origin: FRONTEND_URL || "http://localhost:5173", // Replace with your frontend URL
 //   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
 //   credentials: true, // Allow cookies and authentication headers
 //   optionsSuccessStatus: 204, // For legacy browser support
@@ -11,6 +13,7 @@
 // Dynamic origin based on allowed domains
 const allowedOrigins = [
   "http://localhost:5173",
+  FRONTEND_URL,
   "https://your-production-domain.com",
 ];
 

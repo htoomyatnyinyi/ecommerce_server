@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import prisma from "../../config/database";
-import { JWT_SECRET, COOKIE_MAX_AGE } from "../../utils/secrets";
+import { JWT_SECRET, NODE_ENV } from "../../utils/secrets";
 import bcrypt from "bcrypt";
 import { createAccountType } from "../../types/adminTypes";
 
@@ -44,7 +44,7 @@ const createAccount = async (
 
     // console.log(user, "check");
 
-    const jwt_token = jwt.sign(
+    const accessToken = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       JWT_SECRET,
       {
@@ -52,15 +52,14 @@ const createAccount = async (
       }
     );
 
-    res.cookie("jwt_token", jwt_token, {
+    res.cookie("access_", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: COOKIE_MAX_AGE,
+      secure: NODE_ENV === "production",
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
       sameSite: "strict",
     });
 
     res.status(201).json({
-      jwt_token,
       user: {
         id: user.id,
         username: user.username,

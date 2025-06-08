@@ -3,11 +3,15 @@ import prisma from "../config/database";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+
 import { transporter } from "../utils/mailTransporter";
+import { oauth2Client } from "../utils/googleOauth";
+
 import {
   COOKIE_MAX_AGE,
   EMAIL_USER,
   FRONTEND_URL,
+  JWT_REFRESH_SECRET,
   JWT_SECRET,
   NODE_ENV,
 } from "../utils/secrets";
@@ -18,6 +22,25 @@ import {
   AuthMe,
   AuthMeResponse,
 } from "../types/authTypes";
+
+export const googleAuth = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const authUrl = oauth2Client.generateAuthUrl({
+      access_type: "offline",
+      scope: [
+        "https://www.googleapis.com/auth/userinfo.email",
+        "https://www.googleapis.com/auth/userinfo.profile",
+      ],
+    });
+    res.redirect(authUrl);
+  } catch (error) {
+    console.error("Error generating Google auth URL:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 export const signup = async (
   req: Request<{}, {}, SignUpRequest>,
@@ -54,35 +77,6 @@ export const signup = async (
         isEmailVerified: false,
       },
     });
-
-    // console.log(user, "check");
-
-    //
-    // const jwt_token = jwt.sign(
-    //   { id: user.id, email: user.email, role: user.role },
-    //   JWT_SECRET,
-    //   {
-    //     expiresIn: "1d", //7
-    //   }
-    // );
-
-    // res.cookie("jwt_token", jwt_token, {
-    //   httpOnly: true,
-    //   secure: process.env.NODE_ENV === "production",
-    //   maxAge: COOKIE_MAX_AGE,
-    //   sameSite: "strict",
-    // });
-
-    // res.status(201).json({
-    //   jwt_token,
-    //   user: {
-    //     id: user.id,
-    //     username: user.username,
-    //     email: user.email,
-    //     role: user.role,
-    //     createdAt: user.createdAt,
-    //   },
-    // });
 
     // Generate verification token
     const token = crypto.randomBytes(32).toString("hex");
@@ -197,6 +191,114 @@ export const verifyEmail = async (
   }
 };
 
+// #### START EDIT HERER
+export const resetPassword = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      res.status(400).json({ message: "Token and new password are required" });
+      return;
+    }
+
+    // const resetToken = await findPasswordResetToken(token);
+    const resetToken = await prisma.passwordResetToken.findUnique({
+      where: { token },
+      include: { user: true },
+    });
+    //
+
+    if (!resetToken) {
+      res.status(400).json({ message: "Invalid or expired token" });
+      return;
+    }
+
+    if (resetToken.expiresAt < new Date()) {
+      // await deletePasswordResetToken(resetToken.id);
+      await prisma.passwordResetToken.delete({ where: { id: resetToken.id } });
+      //
+      res.status(400).json({ message: "Invalid or expired token" });
+      return;
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    // await updateUser(resetToken.userId, { password: hashedPassword });
+    await prisma.user.update({
+      where: { id: resetToken.userId },
+      data: { password: hashedPassword },
+    });
+    //
+
+    // await deletePasswordResetToken(resetToken.id);
+    await prisma.passwordResetToken.delete({ where: { id: resetToken.id } });
+    //
+
+    res.status(200).json({
+      message: "Password reset successfully",
+    });
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// export const googleAuthCallback = async (
+//   req: Request,
+//   res: Response
+// ): Promise<void> => {
+//   try {
+//     const { code } = req.query;
+//     if (!code || typeof code !== "string") {
+//       res.status(400).json({ message: "Authorization code is required" });
+//       return;
+//     }
+
+//     const { tokens } = await oauth2Client.getToken(code);
+//     oauth2Client.setCredentials(tokens);
+
+//     const response = await oauth2Client.request({
+//       url: "https://www.googleapis.com/oauth2/v3/userinfo",
+//     });
+//     const {
+//       sub: googleId,
+//       email,
+//       name,
+//     } = response.data as { sub: string; email: string; name: string };
+
+//     let user = await findUserByGoogleId(googleId);
+//     if (!user) {
+//       user = await findUserByEmailOrUsername(email, email);
+//       if (user) {
+//         // Link existing account
+//         user = await updateUser(user.id, { googleId });
+//       } else {
+//         // Create new user
+//         user = await createUser({
+//           username: name || `google_user_${googleId}`,
+//           email,
+//           googleId,
+//         });
+//       }
+//     }
+
+//     // For Google users, email is auto-verified
+//     if (!user.isEmailVerified) {
+//       await updateUser(user.id, { isEmailVerified: true });
+//     }
+
+//     // Redirect to frontend (or issue JWT token)
+//     res.redirect(`${process.env.FRONTEND_URL}/dashboard?userId=${user.id}`);
+//   } catch (error) {
+//     console.error("Error in Google auth callback:", error);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
+
+// End Edit Heer
+
 export const signin = async (
   req: Request<{}, {}, SignInRequest>,
   res: Response
@@ -208,7 +310,7 @@ export const signin = async (
       where: { email },
     });
 
-    if (!user) {
+    if (!user || !user.password) {
       res.status(400).json({
         error: "Invalid credentials",
         message: "Your Email Haven't Register Yet.",
@@ -227,7 +329,7 @@ export const signin = async (
       return;
     }
 
-    const jwt_token = jwt.sign(
+    const accessToken = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       JWT_SECRET,
       {
@@ -235,15 +337,36 @@ export const signin = async (
       }
     );
 
-    res.cookie("e_hmnn", jwt_token, {
+    const refreshToken = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      JWT_REFRESH_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.cookie("access_id", accessToken, {
       httpOnly: true,
-      secure: NODE_ENV === "production",
-      maxAge: COOKIE_MAX_AGE,
-      sameSite: "strict",
+      // secure: true,
+      secure: false,
+      // secure: NODE_ENV === "production",
+      maxAge: 1000 * 60 * 60 * 24,
+      path: "/",
+      sameSite: "lax", // "Lax"÷
+      // sameSite: "lax",
+    });
+
+    res.cookie("refresh_id", refreshToken, {
+      httpOnly: true,
+      // secure: NODE_ENV === "production",
+      secure: false,
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+      path: "/",
+      sameSite: "lax", // "Lax"÷
+      // sameSite: "lax",
     });
 
     res.status(200).json({
-      jwt_token,
+      // accessToken,
+      // refreshToken,
       user: {
         id: user.id,
         username: user.username,
@@ -275,21 +398,24 @@ export const authMe = async (
 };
 
 export const signout = (req: Request, res: Response) => {
-  res.clearCookie("accessToken", {
+  res.clearCookie("access_id", {
     httpOnly: true,
-    // secure: true,
-    secure: NODE_ENV === "production",
+    secure: false,
+    // secure: NODE_ENV === "production",
     // sameSite: "None", // "Lax"
-    sameSite: "strict",
+    sameSite: "lax",
+    // sameSite: "none",
+    maxAge: 0, // Clear cookie immediately
     path: "/",
   });
 
-  res.clearCookie("refreshToken", {
+  res.clearCookie("refresh_id", {
     httpOnly: true,
     // secure: true,
     secure: NODE_ENV === "production",
     // sameSite: "None", // "Lax"
-    sameSite: "strict",
+    sameSite: "none",
+    maxAge: 0, // Clear cookie immediately
     path: "/",
   });
 

@@ -20,8 +20,8 @@ interface JwtPayload {
 }
 
 interface AuthCookies {
-  e_hmnn?: string; // accessToken
-  refreshToken?: string; // no need
+  access_id?: string; // accessToken
+  refresh_id?: string; // no need
 }
 
 const authenticated = async (
@@ -29,10 +29,11 @@ const authenticated = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  const cookies = req.cookies as AuthCookies;
-  const accessToken = cookies.e_hmnn;
+  const access_cookies = req.cookies as AuthCookies;
+  const accessToken = access_cookies.access_id;
 
-  // console.log("authenticated - Cookies received:", req.cookies);
+  console.log("authenticated - Cookies received:", req.cookies);
+
   if (!accessToken) {
     return await handleRefreshToken(req, res, next);
   }
@@ -62,13 +63,13 @@ const handleRefreshToken = async (
   next: NextFunction
 ): Promise<any> => {
   const cookies = req.cookies as AuthCookies;
-  const refreshToken = cookies.refreshToken;
+  const refreshToken = cookies.refresh_id;
 
   // console.log(" when token expier this console will run");
 
   if (!refreshToken) {
     res.status(401).json({
-      message: "Authentication required",
+      message: "Authentication required at refreshCookiesToken",
       error: "No refresh token provided",
     });
     return;
@@ -82,12 +83,13 @@ const handleRefreshToken = async (
       { expiresIn: "15m" } // 15m
     );
 
-    res.cookie("e_hmnn", newAccessToken, {
+    res.cookie("access_id", newAccessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      // secure: process.env.NODE_ENV === "production",
+      secure: false,
+      sameSite: "lax", // false for lax
       path: "/",
-      maxAge: 15 * 60 * 1000, // 15 minutes
+      maxAge: 24 * 60 * 60 * 1000, // 15 minutes
     });
 
     req.user = decoded; // later check

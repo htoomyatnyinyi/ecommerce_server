@@ -13,6 +13,7 @@ model User {
   username      String         @unique
   email         String         @unique
   password      String
+  googleId      String?        @unique // Add for Google OAuth
   role          Role           @default(USER)
   isEmailVerified Boolean      @default(false)
   carts         Cart[]
@@ -26,15 +27,6 @@ model User {
   updatedAt     DateTime       @updatedAt
 }
 
-
-// model PasswordResetToken {
-//   id        String   @id @default(uuid())
-//   token     String   @unique
-//   userId    String
-//   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-//   expiresAt DateTime
-//   createdAt DateTime @default(now())
-// }
 
 model PasswordResetToken {
   id        String   @id @default(uuid())

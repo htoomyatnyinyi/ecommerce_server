@@ -1,6 +1,3 @@
-
-GET http://localhost:8080/
-
 ###
 POST http://localhost:8080/admin/account 
 Content-Type: application/json
@@ -14,15 +11,12 @@ Content-Type: application/json
   "role": "USER"
 }
 ###
-GET http://localhost:8080/verify-email?token=lfkejflk
-
-###
 POST http://localhost:8080/api/auth/signup
 Content-Type: application/json
 
 {
-  "username": "test1",
-  "email": "cirifel663@2mik.com",
+  "username": "htoo",
+  "email": "htoo@mail.com",
   "bio": "This is my Bio",
   "password": "htoomyat",
   "confirmPassword": "htoomyat"
@@ -44,9 +38,14 @@ POST http://localhost:8080/api/auth/signin
 Content-Type: application/json
 
 {
-  "email": "cirifel663@2mik.com",
+  "email": "htoo@mail.com",
   "password": "htoomyat"
 }
+###
+# {
+#   "email": "cirifel663@2mik.com",
+#   "password": "htoomyat"
+# }
 
 ###
 POST http://localhost:8080/api/auth/signout
@@ -68,22 +67,6 @@ DELETE http://localhost:8080/admin/account/2b136452-67cd-43e4-8e80-c2763b10e961
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ###
 GET /products?page=2&limit=5
 GET /products?search=shirt&category=clothing&minPrice=10&maxPrice=50
@@ -91,8 +74,6 @@ GET /products?sortBy=price&sortOrder=asc
 ###
 
 ###
-###
-
 GET http://localhost:8080/api/admin
 ###
 GET http://localhost:8080/api/products
@@ -104,7 +85,7 @@ Content-Type: application/json
   "title": "T-Shirt",
   "description": "80% cotton and 20% nilon",
   "brandName": "HMNN1",
-  "categoryId": "e0f43400-15e8-4009-a5cc-73f32b3473bb",
+  "categoryId": "45ed382b-86b7-4acf-adf6-d4be57292b2b",
   "variants": [
     {
       "sku": "SKU-A21",
