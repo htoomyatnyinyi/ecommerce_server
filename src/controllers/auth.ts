@@ -129,12 +129,6 @@ export const signup = async (
     });
   } catch (error: any) {
     console.log(error);
-    // if (error.code === "P2002") {
-    //   res.status(400).json({
-    //     error: "User with this email or username already exists",
-    //   });
-    //   return;
-    // }
     res.status(400).json({ error: error.message });
   }
 };
@@ -304,6 +298,7 @@ export const signin = async (
   res: Response
 ): Promise<any> => {
   try {
+    console.log(NODE_ENV, "NODE_ENV at signin");
     const { email, password } = req.body;
 
     const user = await prisma.user.findUnique({
@@ -333,7 +328,7 @@ export const signin = async (
       { id: user.id, email: user.email, role: user.role },
       JWT_SECRET,
       {
-        expiresIn: "1d", // 7d
+        expiresIn: "15m", // 7d
       }
     );
 
@@ -345,23 +340,26 @@ export const signin = async (
 
     res.cookie("access_id", accessToken, {
       httpOnly: true,
-      // secure: true,
-      secure: false,
-      // secure: NODE_ENV === "production",
-      maxAge: 1000 * 60 * 60 * 24,
+      secure: NODE_ENV === "production",
+      maxAge: 24 * 60 * 60 * 1000, // 15 minutes
       path: "/",
-      sameSite: "lax", // "Lax"÷
-      // sameSite: "lax",
+      sameSite: "lax",
+      // | Environment        | `secure` | `sameSite` | `credentials` on client  |
+      // | ------------------ | -------- | ---------- | ------------------------ |
+      // | Production (HTTPS) | `true`   | `"none"`   | `credentials: "include"` |
+      // | Development (HTTP) | `false`  | `"lax"`    | `credentials: "include"` |
     });
 
     res.cookie("refresh_id", refreshToken, {
       httpOnly: true,
-      // secure: NODE_ENV === "production",
-      secure: false,
+      secure: NODE_ENV === "production",
       maxAge: 1000 * 60 * 60 * 24 * 7,
       path: "/",
       sameSite: "lax", // "Lax"÷
-      // sameSite: "lax",
+      // | Environment        | `secure` | `sameSite` | `credentials` on client  |
+      // | ------------------ | -------- | ---------- | ------------------------ |
+      // | Production (HTTPS) | `true`   | `"none"`   | `credentials: "include"` |
+      // | Development (HTTP) | `false`  | `"lax"`    | `credentials: "include"` |
     });
 
     res.status(200).json({
@@ -400,23 +398,26 @@ export const authMe = async (
 export const signout = (req: Request, res: Response) => {
   res.clearCookie("access_id", {
     httpOnly: true,
-    secure: false,
-    // secure: NODE_ENV === "production",
-    // sameSite: "None", // "Lax"
+    secure: NODE_ENV === "production",
     sameSite: "lax",
-    // sameSite: "none",
     maxAge: 0, // Clear cookie immediately
     path: "/",
+    // | Environment        | `secure` | `sameSite` | `credentials` on client  |
+    // | ------------------ | -------- | ---------- | ------------------------ |
+    // | Production (HTTPS) | `true`   | `"none"`   | `credentials: "include"` |
+    // | Development (HTTP) | `false`  | `"lax"`    | `credentials: "include"` |
   });
 
   res.clearCookie("refresh_id", {
     httpOnly: true,
-    // secure: true,
     secure: NODE_ENV === "production",
-    // sameSite: "None", // "Lax"
-    sameSite: "none",
+    sameSite: "lax",
     maxAge: 0, // Clear cookie immediately
     path: "/",
+    // | Environment        | `secure` | `sameSite` | `credentials` on client  |
+    // | ------------------ | -------- | ---------- | ------------------------ |
+    // | Production (HTTPS) | `true`   | `"none"`   | `credentials: "include"` |
+    // | Development (HTTP) | `false`  | `"lax"`    | `credentials: "include"` |
   });
 
   res.json({ message: "Logged out successfully" });

@@ -32,7 +32,7 @@ const authenticated = async (
   const access_cookies = req.cookies as AuthCookies;
   const accessToken = access_cookies.access_id;
 
-  console.log("authenticated - Cookies received:", req.cookies);
+  // console.log("authenticated - Cookies received:", req.cookies);
 
   if (!accessToken) {
     return await handleRefreshToken(req, res, next);
@@ -65,7 +65,7 @@ const handleRefreshToken = async (
   const cookies = req.cookies as AuthCookies;
   const refreshToken = cookies.refresh_id;
 
-  // console.log(" when token expier this console will run");
+  console.log(" when token expier this console will run");
 
   if (!refreshToken) {
     res.status(401).json({
@@ -85,11 +85,14 @@ const handleRefreshToken = async (
 
     res.cookie("access_id", newAccessToken, {
       httpOnly: true,
-      // secure: process.env.NODE_ENV === "production",
-      secure: false,
+      secure: process.env.NODE_ENV === "production",
       sameSite: "lax", // false for lax
       path: "/",
       maxAge: 24 * 60 * 60 * 1000, // 15 minutes
+      // | Environment        | `secure` | `sameSite` | `credentials` on client  |
+      // | ------------------ | -------- | ---------- | ------------------------ |
+      // | Production (HTTPS) | `true`   | `"none"`   | `credentials: "include"` |
+      // | Development (HTTP) | `false`  | `"lax"`    | `credentials: "include"` |
     });
 
     req.user = decoded; // later check
