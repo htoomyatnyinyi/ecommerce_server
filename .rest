@@ -15,8 +15,8 @@ POST http://localhost:8080/api/auth/signup
 Content-Type: application/json
 
 {
-  "username": "htoo",
-  "email": "htoo@mail.com",
+  "username": "taco",
+  "email": "tacokoj681@linacit.com",
   "bio": "This is my Bio",
   "password": "htoomyat",
   "confirmPassword": "htoomyat"
@@ -88,35 +88,35 @@ Content-Type: application/json
   "categoryId": "45ed382b-86b7-4acf-adf6-d4be57292b2b",
   "variants": [
     {
-      "sku": "SKU-A21",
-      "price": 189.9,
-      "stock": 100,
+      "sku": "SKU-A22",
+      "price": 139.9,
+      "stock": 60,
       "variantOptions": [
         {
           "attributeName": "size",
           "attributeValue": "sm",
-          "attributeStock": 10
+          "attributeStock": 101
         },
         {
           "attributeName": "size",
           "attributeValue": "md",
-          "attributeStock": 11
+          "attributeStock": 78
 
         },
         {
           "attributeName": "size",
           "attributeValue": "lg",
-          "attributeStock": 12
+          "attributeStock": 10
         },
         {
           "attributeName": "size",
           "attributeValue": "xl",
-          "attributeStock": 13
+          "attributeStock": 75
         },
         {
           "attributeName": "size",
           "attributeValue": "xxl",
-          "attributeStock": 14
+          "attributeStock": 89
         }
       ]
     }
@@ -202,9 +202,51 @@ Content-Type: application/json
 GET http://localhost:8080/api/brand
 
 ###
-POST http:/localhost:8080/api/brand
+POST http://localhost:8080/api/brand
 Content-Type: application/json
 
 {
   "brandName": "Bag"
 }
+
+
+###
+POST http://localhost:8080/api/cart
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": "8d242bb1-25af-426f-a926-ddb3574599c5",
+      "variantId": "508f8f8d-b1ad-40b6-a438-9e2c8c708495",
+      "quantity": 2
+    }
+   ]
+}
+
+# {
+#   "productId": "8d242bb1-25af-426f-a926-ddb3574599c5",
+#   "quantity": 2
+# }
+
+###
+GET http://localhost:8080/api/cart
+  
+
+####
+# {
+#   "userId": "user-1234-uuid",
+#   "items": [
+#     {
+#       "productId": "product-5678-uuid",
+#       "quantity": 2
+#     },
+#     {
+#       "productId": "product-91011-uuid",
+#       "quantity": 1
+#     }
+#   ]
+# }
+
+###
+GET http://localhost:8080/api/products
