@@ -15,7 +15,7 @@ import {
   validateAuthSignInInput,
 } from "../middlewares/validates/validateAuthInput";
 
-import { isEmailVerified } from "../utils/isEmailVerified";
+// import { isEmailVerified } from "../utils/isEmailVerified";
 
 const router = express.Router();
 

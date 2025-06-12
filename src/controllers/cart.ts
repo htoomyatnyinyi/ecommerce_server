@@ -10,79 +10,136 @@ interface CartRequest {
   // You can add more fields if needed, like userId, etc.
   // userId?: string; // Optional if you want to include userId in the request
 }
-const addToCart = async (
-  req: Request<{}, {}, CartRequest>,
-  res: Response
-): Promise<any> => {
-  const userId = req.user?.id; // Assuming user ID is stored in req.user
+
+// const addToCart = async (req: Request, res: Response): Promise<any> => {
+//   const userId = req.user?.id; // Assuming user ID is stored in req.user
+//   if (!userId) {
+//     return res
+//       .status(401)
+//       .json({ error: "Unauthorized: User not authenticated." });
+//   }
+
+//   const data = req.body; // Assuming the request body contains the cart data
+//   // Here you would typically process the data, e.g., save it to a database
+//   console.log(
+//     "Data pure received:",
+//     data
+//     // data.items.map((item: any) => item.productId)
+//   );
+
+//   // const cart = {
+//   //   userId: userId,
+//   //   items: data, // Assuming items is an array of cart items
+//   // };
+//   // // // Here you would typically save the cart to a database
+//   // console.log("Cart to be saved:", cart);
+
+//   // const respoonse = await prisma.cart.create({
+//   //   data: {
+//   //     userId,
+//   //     items: {
+//   //       create: data.items.map((item) => ({
+//   //         productId: item.productId,
+//   //         variantId: item.variantId,
+//   //         quantity: item.quantity,
+//   //       })),
+//   //     },
+//   //   },
+//   // });
+
+//   const respoonse = await prisma.cart.create({
+//     data: {
+//       userId,
+//       items: {
+//         create: data.items.map((item: CartItem) => ({
+//           productId: item.productId,
+//           variantId: item.variantId,
+//           quantity: item.quantity,
+//         })),
+//       },
+//     },
+//     include: {
+//       items: true, // Include items in the response
+//       // You can include other related models if needed
+//       // e.g., product, variant, etc.
+//       // product: true,
+//       // variant: true,
+//     },
+//   });
+//   console.log("Cart saved:", respoonse);
+
+//   res.json(respoonse);
+//   // For demonstration, we'll just send a response back
+//   // res.json({ data, message: "Cart updated successfully" });
+// };
+
+const addToCart = async (req: Request, res: Response): Promise<any> => {
+  const userId = req.user?.id;
+  const data = req.body;
   if (!userId) {
     return res
       .status(401)
       .json({ error: "Unauthorized: User not authenticated." });
   }
-
-  const data = req.body; // Assuming the request body contains the cart data
-  // Here you would typically process the data, e.g., save it to a database
-  console.log(
-    "Data pure received:",
-    data.items.map((item) => item.productId)
-  );
-
-  // const cart = {
-  //   userId: userId,
-  //   items: data, // Assuming items is an array of cart items
-  // };
-  // // // Here you would typically save the cart to a database
-  // console.log("Cart to be saved:", cart);
-
-  // const respoonse = await prisma.cart.create({
-  //   data: {
-  //     userId,
-  //     items: {
-  //       create: data.items.map((item) => ({
-  //         productId: item.productId,
-  //         variantId: item.variantId,
-  //         quantity: item.quantity,
-  //       })),
-  //     },
-  //   },
-  // });
-
-  const respoonse = await prisma.cart.create({
-    data: {
-      userId,
-      items: {
-        create: data.items.map((item: CartItem) => ({
-          productId: item.productId,
-          variantId: item.variantId,
-          quantity: item.quantity,
-        })),
+  if (!data || !data.items || !Array.isArray(data.items)) {
+    return res.status(400).json({ error: "Bad Request: Invalid cart data." });
+  }
+  console.log("Data received:", data);
+  try {
+    const cart = await prisma.cart.create({
+      data: {
+        userId,
+        items: {
+          create: data.items.map((item: CartItem) => ({
+            productId: item.productId,
+            variantId: item.variantId,
+            quantity: item.quantity,
+          })),
+        },
       },
-    },
-    include: {
-      items: true, // Include items in the response
-      // You can include other related models if needed
-      // e.g., product, variant, etc.
-      // product: true,
-      // variant: true,
-    },
-  });
-  console.log("Cart saved:", respoonse);
-
-  res.json(respoonse);
-  // For demonstration, we'll just send a response back
-  // res.json({ data, message: "Cart updated successfully" });
+      include: { items: true },
+    });
+    res.json(cart);
+  } catch (error) {
+    res.status(500).json({ error: (error as any).message });
+  }
 };
 
-// const getCart = async (req: Request, res: Response): Promise<any> => {
+// const addToCartWorld = async (req: Request, res: Response): Promise<any> => {
+//   const userId = req.user?.id;
+//   const data = req.body;
 //   try {
-//     const getCart = await prisma.cart.findMany();
-//     res.json(getCart);
+//     // First, find the cart by userId
+//     let cartRecord = await prisma.cart.findFirst({
+//       where: { userId: req.user!.id },
+//     });
+
+//     let cart;
+//     if (cartRecord) {
+//       // Update existing cart
+//       cart = await prisma.cart.update({
+//         where: { id: cartRecord.id },
+//         data: {
+//           items: { deleteMany: {}, create: data.items },
+//           updatedAt: new Date(),
+//         },
+//         include: { items: true },
+//       });
+//     } else {
+//       // Create new cart
+//       cart = await prisma.cart.create({
+//         data: {
+//           userId: req.user!.id,
+//           items: { create: data.items },
+//         },
+//         include: { items: true },
+//       });
+//     }
+//     res.json(cart);
 //   } catch (error) {
-//     console.error(error);
+//     res.status(500).json({ error: (error as any).message });
 //   }
 // };
-
 const getCart = async (req: Request, res: Response): Promise<any> => {
   const userId = req.user?.id; // Assuming user ID is stored in req.user
   if (!userId) {

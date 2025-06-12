@@ -121,10 +121,16 @@ POST http://localhost:8080/api/cart/items
 Content-Type: application/json
 
 {
-  "productId": "8d242bb1-25af-426f-a926-ddb3574599c5",
-  "variantId": "508f8f8d-b1ad-40b6-a438-9e2c8c708495",
-  "quantity": 2
+  "productId": "420d44d8-152c-41a8-a72e-af4bd8256cda",
+  "variantId": "7bd2d276-7a0f-47a1-89d1-dc0588d33adb",
+  "quantity": 5
 }
+
+# {
+#   "productId": "8d242bb1-25af-426f-a926-ddb3574599c5",
+#   "variantId": "508f8f8d-b1ad-40b6-a438-9e2c8c708495",
+#   "quantity": 5
+# }
 
 ### Update Cart Item Quantity
 # Assuming the cart item ID is 'cart-item-id-123'
