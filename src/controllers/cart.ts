@@ -84,6 +84,14 @@ const addToCart = async (
 // };
 
 const getCart = async (req: Request, res: Response): Promise<any> => {
+  const userId = req.user?.id; // Assuming user ID is stored in req.user
+  if (!userId) {
+    return res
+      .status(401)
+      .json({ error: "Unauthorized: User not authenticated." });
+  }
+  console.log("User ID:", userId);
+
   try {
     const getCart = await prisma.cart.findMany({
       include: {

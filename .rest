@@ -96,27 +96,6 @@ Content-Type: application/json
           "attributeName": "size",
           "attributeValue": "sm",
           "attributeStock": 101
-        },
-        {
-          "attributeName": "size",
-          "attributeValue": "md",
-          "attributeStock": 78
-
-        },
-        {
-          "attributeName": "size",
-          "attributeValue": "lg",
-          "attributeStock": 10
-        },
-        {
-          "attributeName": "size",
-          "attributeValue": "xl",
-          "attributeStock": 75
-        },
-        {
-          "attributeName": "size",
-          "attributeValue": "xxl",
-          "attributeStock": 89
         }
       ]
     }
@@ -126,11 +105,6 @@ Content-Type: application/json
       "url": "https://images.pexels.com/photos/325044/pexels-photo-325044.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
       "altText": "Product image",
       "isPrimary": true
-    },
-    {
-      "url": "https://images.pexels.com/photos/1379640/pexels-photo-1379640.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-      "altText": "Product image",
-      "isPrimary": false
     }
   ]
 }

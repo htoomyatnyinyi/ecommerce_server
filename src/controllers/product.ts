@@ -157,7 +157,7 @@ export const getProducts = async (req: Request, res: Response) => {
     });
 
     res.status(200).json({
-      success: true,
+      // success: true,
       data: products,
       pagination: {
         total: totalCount,
