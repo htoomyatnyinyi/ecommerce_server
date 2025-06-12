@@ -23,9 +23,9 @@ router.post("/signup", validateAuthSignUpInput, signup);
 router.post("/signin", validateAuthSignInInput, signin);
 router.post("/signout", signout);
 
-router.get("/authme", authenticated, authMe);
+router.get("/me", authenticated, authMe);
 router.post("/verify-email", verifyEmail);
-router.post("/reset-password-request", requestPasswordReset);
+router.post("/request-password-reset", requestPasswordReset);
 router.post("/reset-password", resetPassword);
 router.get("/google", googleAuth);
 

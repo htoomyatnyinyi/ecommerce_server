@@ -10,9 +10,7 @@ import product from "./routes/product";
 import cart from "./routes/cart";
 import category from "./routes/category";
 import admin from "./routes/admin";
-
-// import prisma from "./config/database";
-// import { verifyEmail } from "./controllers/auth";
+import brand from "./routes/brand";
 
 const app: Express = express();
 
@@ -26,8 +24,7 @@ app.use("/admin", admin);
 app.use("/api/products", product);
 app.use("/api/cart", cart);
 app.use("/api/category", category);
-
-// app.get("/verify-email", verifyEmail);
+app.use("/api/brands", brand);
 
 // --- Route for testing server ---
 app.get("/", (req: Request, res: Response) => {
