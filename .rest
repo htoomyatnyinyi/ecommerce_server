@@ -51,8 +51,14 @@ GET http://localhost:8080/api/products?search=shirt&sortBy=price&sortOrder=asc
 
 ###
 GET http://localhost:8080/api/products
+###
+GET http://localhost:8080/api/products?search=shirt
+###
+GET http://localhost:8080/api/products?category=Clothing
+###
+GET http://localhost:8080/api/products/420d44d8-152c-41a8-a72e-af4bd8256cda
+
 ### Get Product by ID
-GET http://localhost:8080/api/products/8d242bb1-25af-426f-a926-ddb3574599c5
 
 ### Create Product (Admin/Employer Only)
 POST http://localhost:8080/api/products
