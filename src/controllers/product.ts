@@ -122,7 +122,12 @@ export const getProducts = async (
       take: limitNum,
       include: {
         images: true,
-        variants: true,
+        variants: {
+          include: {
+            variantOptions: true,
+          },
+        },
+
         category: true,
       },
       orderBy: {
