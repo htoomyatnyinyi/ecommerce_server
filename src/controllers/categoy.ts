@@ -13,7 +13,7 @@ export const createCategory = async (
       .json({ message: "Unauthorized: User not authenticated" });
   }
   console.log(req.body, "at category");
-  const { categoryName } = req.body;
+  // const { categoryName } = req.body;
   const { name } = req.body;
 
   try {

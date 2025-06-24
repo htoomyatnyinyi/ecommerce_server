@@ -4,7 +4,7 @@ import { authenticated } from "../middlewares/authMiddleware";
 
 const router = express.Router();
 
-router.post("/items", authenticated, addToCart);
+router.post("/", authenticated, addToCart);
 router.get("/", authenticated, getCart);
 // router.get("/", authenticated, getCartItem);
 

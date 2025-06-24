@@ -8,7 +8,7 @@ import { transporter } from "../utils/mailTransporter";
 import { oauth2Client } from "../utils/googleOauth";
 
 import {
-  COOKIE_MAX_AGE,
+  // COOKIE_MAX_AGE,
   EMAIL_USER,
   FRONTEND_URL,
   JWT_REFRESH_SECRET,

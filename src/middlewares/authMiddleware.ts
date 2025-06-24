@@ -40,7 +40,6 @@ const authenticated = async (
 
   try {
     const decoded = jwt.verify(accessToken, JWT_SECRET) as JwtPayload;
-
     // console.log("Token decoded successfully:", decoded);
 
     req.user = decoded; // ceck later
@@ -137,4 +136,5 @@ const permission = (roles: string[]) => {
 // router.get('/admin', authenticated, permission(['ADMIN']), (req, res) => {
 //   res.json({ message: 'Admin access granted' });
 // });
+
 export { authenticated, permission };

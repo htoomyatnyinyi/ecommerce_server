@@ -14,33 +14,35 @@ interface CartRequest {
 const addToCart = async (req: Request, res: Response): Promise<any> => {
   const userId = req.user?.id;
   const data = req.body;
+
   if (!userId) {
     return res
       .status(401)
       .json({ error: "Unauthorized: User not authenticated." });
   }
-  if (!data || !data.items || !Array.isArray(data.items)) {
-    return res.status(400).json({ error: "Bad Request: Invalid cart data." });
-  }
-  console.log("Data received:", data);
-  try {
-    const cart = await prisma.cart.create({
-      data: {
-        userId,
-        items: {
-          create: data.items.map((item: CartItem) => ({
-            productId: item.productId,
-            variantId: item.variantId,
-            quantity: item.quantity,
-          })),
-        },
-      },
-      include: { items: true },
-    });
-    res.json(cart);
-  } catch (error) {
-    res.status(500).json({ error: (error as any).message });
-  }
+  console.log(req.body, "at addToCart");
+  // if (!data || !data.items || !Array.isArray(data.items)) {
+  //   return res.status(400).json({ error: "Bad Request: Invalid cart data." });
+  // }
+  // console.log("Data received:", data);
+  // try {
+  //   const cart = await prisma.cart.create({
+  //     data: {
+  //       userId,
+  //       items: {
+  //         create: data.items.map((item: CartItem) => ({
+  //           productId: item.productId,
+  //           variantId: item.variantId,
+  //           quantity: item.quantity,
+  //         })),
+  //       },
+  //     },
+  //     include: { items: true },
+  //   });
+  //   res.json(cart);
+  // } catch (error) {
+  //   res.status(500).json({ error: (error as any).message });
+  // }
 };
 
 const getCart = async (req: Request, res: Response): Promise<any> => {

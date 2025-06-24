@@ -22,14 +22,21 @@ export const createProduct = async (
 ): Promise<any> => {
   try {
     const userId = req.user?.id;
+
     if (!userId) {
       return res
         .status(401)
         .json({ message: "Unauthorized: User not authenticated" });
     }
 
-    const { title, description, categoryId, variants, images } = req.body;
-    console.log(req.body);
+    console.log(req.body, "check req.body");
+    const { title, description, brandName, categoryId, variants, images } =
+      req.body;
+
+    // Basic validation
+    if (!categoryId || !brandName) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
 
     const createdProduct = await prisma.product.create({
       data: {
@@ -37,14 +44,65 @@ export const createProduct = async (
         description,
         categoryId,
         userId: userId,
-        variants: {},
-        images: {},
+        variants: {
+          create: variants?.map((variant: any): any => ({
+            sku: variant.sku,
+            price: variant.price,
+            discountPrice: variant.discountPrice,
+            stock: variant.stock,
+            variantOptions: {
+              create: variant.variantOptions.map((variantOption: any): any => ({
+                attributeName: variantOption.attributeName,
+                attributeValue: variantOption.attributeValue,
+                attributeStock: variantOption.attributeStock,
+              })),
+            },
+          })),
+        },
+        images: {
+          create: images?.map((image: any) => ({
+            url: image.url,
+            altText: image.altText,
+            isPrimary: image.isPrimary,
+          })),
+        },
+
+        // productBrands: {
+        //   // This is the crucial part for the brand
+        //   create: [
+        //     {
+        //       // This 'create' creates an entry in the 'ProductBrands' join table
+        //       brand: {
+        //         // This 'brand' field points to the 'Brand' model
+        //         connectOrCreate: {
+        //           where: {
+        //             brandName: brandName, // Assuming brandName is unique
+        //           },
+        //           create: {
+        //             brandName: brandName, // Create a new brand if it doesn't exist
+        //           },
+        //         },
+
+        //         // --- OPTION A: Connect to an existing brand by its unique name or ID ---
+        //         // connect: {
+        //         //   // id: "existing-brand-id"
+        //         //   brandName: "EcoWear", // Use a unique field to connect
+        //         // },
+
+        //         // --- OPTION B: Create a new brand if it doesn't exist ---
+        //         // create: {
+        //         //   brandName: "EcoWear"
+        //         // }
+        //       },
+        //     },
+        //   ],
+        // },
       },
     });
 
     console.log(createdProduct, "check");
 
-    res.status(200).json({ message: "It workd" });
+    res.status(200).json({ message: "It worked", data: createdProduct });
   } catch (error) {
     console.error(error);
     res.status(400).json({ message: error });
@@ -129,12 +187,13 @@ export const getProducts = async (
         },
 
         category: true,
+        productBrands: true,
       },
       orderBy: {
         [sortBy]: sortOrder,
       },
     });
-    console.log(responseProducts);
+    // console.log(responseProducts);
 
     res.status(200).json({
       queryParams: req.query,

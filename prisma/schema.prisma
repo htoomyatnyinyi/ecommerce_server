@@ -60,7 +60,7 @@ model Product {
   category      Category?       @relation(fields: [categoryId], references: [id])
   userId        String
   user          User            @relation(fields: [userId], references: [id])
-  createdAt     DateTime        @default(now())
+  createdAt     DateTime        @default(now())     
   updatedAt     DateTime        @updatedAt
   @@index([title])
 }
@@ -78,12 +78,18 @@ model Brand {
   id         String          @id @default(uuid())
   brandName  String          @unique
   productBrand ProductBrands[]
+  createdAt DateTime  @default(now())      
+  updatedAt DateTime  @updatedAt
 }
 
+
+// can get products data by categoryName
 model Category {
   id           String       @id @default(uuid())
   categoryName String       @unique
   products     Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Variant {
