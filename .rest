@@ -89,6 +89,18 @@ Content-Type: application/json
     }
   ]
 }
+###
+GET http://localhost:8080/api/cart
+###
+POST http://localhost:8080/api/cart
+Content-Type: application/json
+
+{
+  "productId": "94396302-814b-4ceb-ae80-251de7b4e569", 
+  "variantId": "3069fffb-5ced-4a23-ae94-06613143a757",
+  "quantity": 2
+}
+
 
 # -------------------------------------
 # CATEGORIES & BRANDS

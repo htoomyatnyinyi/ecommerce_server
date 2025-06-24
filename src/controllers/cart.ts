@@ -13,14 +13,35 @@ interface CartRequest {
 
 const addToCart = async (req: Request, res: Response): Promise<any> => {
   const userId = req.user?.id;
-  const data = req.body;
 
   if (!userId) {
     return res
       .status(401)
       .json({ error: "Unauthorized: User not authenticated." });
   }
-  console.log(req.body, "at addToCart");
+  // const data = req.body;
+
+  // console.log(req.body, "at addToCart");
+  const { productId, variantId, quantity } = req.body;
+  try {
+    const cart = await prisma.cart.create({
+      data: {
+        userId,
+        items: {
+          create: {
+            productId,
+            variantId,
+            quantity,
+          },
+        },
+      },
+      include: { items: true },
+    });
+    res.json(cart);
+  } catch (error) {
+    res.status(500).json({ msg: "error" });
+    // res.status(500).json({ error: (error as any).message });
+  }
   // if (!data || !data.items || !Array.isArray(data.items)) {
   //   return res.status(400).json({ error: "Bad Request: Invalid cart data." });
   // }
@@ -41,7 +62,8 @@ const addToCart = async (req: Request, res: Response): Promise<any> => {
   //   });
   //   res.json(cart);
   // } catch (error) {
-  //   res.status(500).json({ error: (error as any).message });
+  //   res.status(500).json({ msg: "error" });
+  //   // res.status(500).json({ error: (error as any).message });
   // }
 };
 
@@ -59,7 +81,13 @@ const getCart = async (req: Request, res: Response): Promise<any> => {
       include: {
         items: {
           include: {
+            // product: {
+            //   select: { title: true, description: true },
+            // },
             product: true,
+            // variant: {
+            //   select: { sku: true, stock: true, price: true },
+            // },
             variant: true,
           },
         },
@@ -73,6 +101,7 @@ const getCart = async (req: Request, res: Response): Promise<any> => {
     // res.json(getCart);
     // If you want to return the cart items without product and variant details
     // res.json(getCart.map(cart => cart.items));
+    console.log({ ...getCart });
     res.json(getCart);
   } catch (error) {
     console.error(error);
