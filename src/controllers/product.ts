@@ -37,6 +37,7 @@ export const createProduct = async (
     if (!categoryId || !brandName) {
       return res.status(400).json({ error: "Missing required fields" });
     }
+    console.log(categoryId, brandName);
 
     const createdProduct = await prisma.product.create({
       data: {

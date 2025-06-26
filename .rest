@@ -60,26 +60,25 @@ GET http://localhost:8080/api/products/420d44d8-152c-41a8-a72e-af4bd8256cda
 ###
 ### Get Product by ID
 
-GET http://localhost:8080/api/products
 ### Create Product (Admin/Employer Only)
 POST http://localhost:8080/api/products
 Content-Type: application/json
 
 {
-  "title": "Premium T-Shirt 1",
+  "title": "Premium T-Shirt 2",
   "description": "100% organic cotton la",
   "brandName": "EcoWear",
-  "categoryId": "33d38860-1391-470e-96ca-4d6e0aa3780a",
+  "categoryId": "687ab86f-39aa-4445-bc93-cb60a567866a",
   "variants": [
     {
-      "sku": "ECO-TS-BLK-M",
+      "sku": "ECO-TS-BLK-S",
       "price": 28,
       "stock": 100,
       "color": "Black",
       "size": "M"
     },
     {
-      "sku": "ECO-TS-BLK-L",
+      "sku": "ECO-TS-BLK-XL",
       "price": 30,
       "stock": 80,
       "color": "White",
@@ -94,6 +93,8 @@ Content-Type: application/json
     }
   ]
 }
+###
+GET http://localhost:8080/api/products
 
 ###
 GET http://localhost:8080/api/cart
@@ -102,12 +103,21 @@ GET http://localhost:8080/api/cart
 POST http://localhost:8080/api/cart
 Content-Type: application/json
 
+# {
+#   "productId": "bccd5179-77a3-443d-82c1-4696349fc413", 
+#   "variantId": "a14e9c55-9a6d-42c5-ad66-66b91165103f",
+#   "quantity": 1
+# }
+
 {
-  "productId": "54e8e3be-9d75-4ad9-9c4f-a4c9886dc35c", 
-  "variantId": "e891e2bb-4d91-4fdd-b581-d4ae8706a096",
-  "quantity": 3
+  "productId": "5e81a089-343e-4258-a8ef-7ac1b03b1988", 
+  "variantId": "2f2da615-d4fe-4797-a41c-bebae3ae6f75",
+  "quantity": 1
 }
 
+  # "variantId": "457a680c-75ee-4014-8f1d-689e7c930fdd",
+###
+DELETE http://localhost:8080/api/cart/5e81a089-343e-4258-a8ef-7ac1b03b1988
 ###
 POST http://localhost:8080/api/cart/cart-total
 Content-Type: application/json
@@ -129,7 +139,7 @@ POST http://localhost:8080/api/category
 Content-Type: application/json
 
 {
-  "name": "Apparels"
+  "name": "T-Shirt"
 }
 
   # "categoryName": "Apparels"

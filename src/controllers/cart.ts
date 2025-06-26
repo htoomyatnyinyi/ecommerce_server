@@ -21,57 +21,100 @@ const addToCart = async (req: Request, res: Response): Promise<any> => {
   }
   // const data = req.body;
 
-  // console.log(req.body, "at addToCart");
   const { productId, variantId, quantity } = req.body;
+  console.log(productId, variantId, quantity, "at addToCart");
+
   try {
-    const cart = await prisma.cart.create({
-      data: {
-        userId,
-        items: {
-          create: {
-            productId,
-            variantId,
-            quantity,
-          },
-        },
-      },
-      include: {
-        items: {
-          select: {
-            id: true,
-            cartId: true,
-            quantity: true,
-          },
-        },
-      },
+    // Check if product exists and has enough stock
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
     });
-    res.json(cart);
+
+    if (!product) {
+      return res.status(404).json({ msg: "Product Not Found" });
+    }
+
+    // Check if item already in cart
+    const existingItem = await prisma.cartItem.findFirst({
+      where: { cart: { userId }, productId: productId, variantId: variantId },
+    });
+
+    // console.log(existingItem, "eistingItem");
+
+    let cartItem;
+    if (existingItem) {
+      // update quantity
+      // console.log(existingItem, "alredy existing cart");
+      res.json(existingItem);
+      // cartItem = await prisma.cartItem.update({
+      //   where: { id: existingItem.id }, // only for add to cart but variantId haven't apply
+      //   data: { quantity: existingItem.quantity + quantity },
+      //   include: { product: true },
+      // });
+      cartItem = await prisma.cartItem.update({
+        where: { id: existingItem.id }, // Ensure variantId is included in the update
+        data: { quantity: existingItem.quantity + quantity },
+        include: {
+          product: true,
+          variant: true, // Include variant details if needed
+        },
+      });
+    } else {
+      // Find the user's cart by userId
+      let userCart = await prisma.cart.findFirst({
+        where: { userId },
+      });
+
+      // If the cart doesn't exist, create one
+      if (!userCart) {
+        userCart = await prisma.cart.create({
+          data: { userId },
+        });
+      }
+
+      // add new item to cartItem table
+      cartItem = await prisma.cartItem.create({
+        data: {
+          cart: { connect: { id: userCart.id } },
+          product: { connect: { id: productId } },
+          variant: { connect: { id: variantId } }, // Assuming variantId is provided
+          quantity,
+        },
+        include: {
+          product: true,
+          variant: true, // Include variant details if needed
+        },
+      });
+
+      // #
+
+      // add new item into cart table
+      // const cartItem = await prisma.cart.create({
+      //   data: {
+      //     userId,
+      //     items: {
+      //       create: {
+      //         productId,
+      //         variantId,
+      //         quantity,
+      //       },
+      //     },
+      //   },
+      //   include: {
+      //     items: {
+      //       select: {
+      //         id: true,
+      //         cartId: true,
+      //         quantity: true,
+      //       },
+      //     },
+      //   },
+      // });
+      res.json(cartItem);
+    }
   } catch (error) {
     res.status(500).json({ msg: "error" });
   }
-  // if (!data || !data.items || !Array.isArray(data.items)) {
-  //   return res.status(400).json({ error: "Bad Request: Invalid cart data." });
-  // }
-  // console.log("Data received:", data);
-  // try {
-  //   const cart = await prisma.cart.create({
-  //     data: {
-  //       userId,
-  //       items: {
-  //         create: data.items.map((item: CartItem) => ({
-  //           productId: item.productId,
-  //           variantId: item.variantId,
-  //           quantity: item.quantity,
-  //         })),
-  //       },
-  //     },
-  //     include: { items: true },
-  //   });
-  //   res.json(cart);
-  // } catch (error) {
-  //   res.status(500).json({ msg: "error" });
-  //   // res.status(500).json({ error: (error as any).message });
-  // }
 };
 
 const getCart = async (req: Request, res: Response): Promise<any> => {
@@ -81,7 +124,7 @@ const getCart = async (req: Request, res: Response): Promise<any> => {
       .status(401)
       .json({ error: "Unauthorized: User not authenticated." });
   }
-  console.log("User ID:", userId);
+  // console.log("User ID:", userId);
 
   try {
     const getCart = await prisma.cart.findMany({
@@ -108,20 +151,41 @@ const getCart = async (req: Request, res: Response): Promise<any> => {
     // res.json(getCart);
     // If you want to return the cart items without product and variant details
     // res.json(getCart.map(cart => cart.items));
-    console.log({ ...getCart });
-    res.json(getCart);
+    // console.log({ ...getCart });
+    res.status(200).json(getCart);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const removeCart = async (req: Request, res: Response): Promise<any> => {
+  const userId = req.user?.id;
+  const removeCartId = req.body;
+  // const removeCartId = req.params.id;
+
+  if (!userId) {
+    return res
+      .status(401)
+      .json({ error: "Unauthorized: User not authenticated." });
+  }
+
+  try {
+    await prisma.cartItem.delete({
+      where: { id: removeCartId, cart: { userId } },
+    });
+    res.json({ msg: "remove cart already." });
   } catch (error) {
     console.error(error);
   }
 };
 
 const cartTotal = async (req: Request, res: Response): Promise<any> => {
-  const { itemId } = req.body;
-  // console.log(itemId, req.body);
+  const { cartId } = req.body;
+  // console.log(cartId, req.body);
 
   try {
     const cartItems = await prisma.cartItem.findMany({
-      where: { id: itemId },
+      where: { id: cartId },
       include: { product: true, variant: true },
     });
 
@@ -138,4 +202,4 @@ const cartTotal = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-export { addToCart, getCart, cartTotal };
+export { addToCart, getCart, removeCart, cartTotal };
