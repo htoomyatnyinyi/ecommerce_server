@@ -8,6 +8,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+
 model User {
   id            String         @id @default(uuid())
   username      String         @unique
@@ -73,6 +75,34 @@ model ProductBrands {
   product   Product     @relation(fields: [productId], references: [id])
 }
 
+model Variant {
+  id             String          @id @default(uuid())
+  sku            String          @unique
+  color          String
+  size           String
+  price          Decimal         @db.Decimal(10, 2)
+  discountPrice  Decimal?        @db.Decimal(10, 2)
+  stock          Int?
+  cartItems      CartItem[]
+  orderItems     OrderItem[]
+  productId      String
+  product        Product         @relation(fields: [productId], references: [id])
+  // variantOptions VariantOption[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  @@index([sku])
+}
+
+// model VariantOption {
+//   id             String   @id @default(uuid())
+//   attributeName  String
+//   attributeValue String
+//   attributeStock Int?
+//   variantId      String
+//   variant        Variant  @relation(fields: [variantId], references: [id])
+//   createdAt      DateTime @default(now())
+//   updatedAt      DateTime @updatedAt
+// }
 
 model Brand {
   id         String          @id @default(uuid())
@@ -90,33 +120,6 @@ model Category {
   products     Product[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-}
-
-model Variant {
-  id             String          @id @default(uuid())
-  sku            String          @unique
-  price          Decimal         @db.Decimal(10, 2)
-  discountPrice  Decimal?        @db.Decimal(10, 2)
-  stock          Int?
-  cartItems      CartItem[]
-  orderItems     OrderItem[]
-  productId      String
-  product        Product         @relation(fields: [productId], references: [id])
-  variantOptions VariantOption[]
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  @@index([sku])
-}
-
-model VariantOption {
-  id             String   @id @default(uuid())
-  attributeName  String
-  attributeValue String
-  attributeStock Int?
-  variantId      String
-  variant        Variant  @relation(fields: [variantId], references: [id])
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
 }
 
 model Image {
@@ -150,6 +153,8 @@ model CartItem {
   variant   Variant  @relation(fields: [variantId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId])
 }
 
 model Order {

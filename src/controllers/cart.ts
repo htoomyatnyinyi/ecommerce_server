@@ -35,12 +35,19 @@ const addToCart = async (req: Request, res: Response): Promise<any> => {
           },
         },
       },
-      include: { items: true },
+      include: {
+        items: {
+          select: {
+            id: true,
+            cartId: true,
+            quantity: true,
+          },
+        },
+      },
     });
     res.json(cart);
   } catch (error) {
     res.status(500).json({ msg: "error" });
-    // res.status(500).json({ error: (error as any).message });
   }
   // if (!data || !data.items || !Array.isArray(data.items)) {
   //   return res.status(400).json({ error: "Bad Request: Invalid cart data." });
@@ -108,4 +115,27 @@ const getCart = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-export { addToCart, getCart };
+const cartTotal = async (req: Request, res: Response): Promise<any> => {
+  const { itemId } = req.body;
+  // console.log(itemId, req.body);
+
+  try {
+    const cartItems = await prisma.cartItem.findMany({
+      where: { id: itemId },
+      include: { product: true, variant: true },
+    });
+
+    console.log(cartItems);
+    let totalPrice = 0;
+    cartItems.forEach((item) => {
+      const price = Number(item.variant?.price) || 0;
+      const quantity = Number(item.quantity) || 0;
+      totalPrice += price * quantity;
+    });
+    res.status(201).json(totalPrice);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+export { addToCart, getCart, cartTotal };

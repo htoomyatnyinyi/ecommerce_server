@@ -50,13 +50,8 @@ export const createProduct = async (
             price: variant.price,
             discountPrice: variant.discountPrice,
             stock: variant.stock,
-            variantOptions: {
-              create: variant.variantOptions.map((variantOption: any): any => ({
-                attributeName: variantOption.attributeName,
-                attributeValue: variantOption.attributeValue,
-                attributeStock: variantOption.attributeStock,
-              })),
-            },
+            color: variant.color,
+            size: variant.size,
           })),
         },
         images: {
@@ -180,12 +175,7 @@ export const getProducts = async (
       take: limitNum,
       include: {
         images: true,
-        variants: {
-          include: {
-            variantOptions: true,
-          },
-        },
-
+        variants: true,
         category: true,
         productBrands: true,
       },
@@ -193,7 +183,7 @@ export const getProducts = async (
         [sortBy]: sortOrder,
       },
     });
-    // console.log(responseProducts);
+    console.log(responseProducts);
 
     res.status(200).json({
       queryParams: req.query,
@@ -228,11 +218,7 @@ export const getProductById = async (
       },
       include: {
         images: true,
-        variants: {
-          include: {
-            variantOptions: true,
-          },
-        },
+        variants: true,
         category: true,
       },
     });
