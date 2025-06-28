@@ -160,22 +160,25 @@ const getCart = async (req: Request, res: Response): Promise<any> => {
 
 const removeCart = async (req: Request, res: Response): Promise<any> => {
   const userId = req.user?.id;
-  const { removeCartItemId } = req.body;
-  // const removeCartItemId = req.params.id;
-
-  console.log(removeCartItemId, "removeCartItemId", req.body);
-
   if (!userId) {
     return res
       .status(401)
       .json({ error: "Unauthorized: User not authenticated." });
   }
 
+  const { removeCartItemId } = req.body;
+  // const removeCartItemId = req.params.id;
+
+  console.log(removeCartItemId, "removeCartItemId", req.body);
+
   try {
-    await prisma.cartItem.delete({
+    const removedCartItem = await prisma.cartItem.delete({
       where: { id: removeCartItemId, cart: { userId } },
     });
-    res.json({ msg: "remove cart already." });
+
+    res
+      .status(200)
+      .json({ success: true, msg: "remove cart already.", removedCartItem });
   } catch (error) {
     console.error(error);
   }
