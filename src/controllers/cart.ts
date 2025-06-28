@@ -160,8 +160,10 @@ const getCart = async (req: Request, res: Response): Promise<any> => {
 
 const removeCart = async (req: Request, res: Response): Promise<any> => {
   const userId = req.user?.id;
-  const removeCartId = req.body;
-  // const removeCartId = req.params.id;
+  const { removeCartItemId } = req.body;
+  // const removeCartItemId = req.params.id;
+
+  console.log(removeCartItemId, "removeCartItemId", req.body);
 
   if (!userId) {
     return res
@@ -171,7 +173,7 @@ const removeCart = async (req: Request, res: Response): Promise<any> => {
 
   try {
     await prisma.cartItem.delete({
-      where: { id: removeCartId, cart: { userId } },
+      where: { id: removeCartItemId, cart: { userId } },
     });
     res.json({ msg: "remove cart already." });
   } catch (error) {

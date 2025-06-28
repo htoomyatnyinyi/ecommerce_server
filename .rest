@@ -192,6 +192,11 @@ DELETE http://localhost:8080/api/cart/items/cart-item-id-123
 
 ### Clear Entire Cart
 DELETE http://localhost:8080/api/cart
+Content-Type: application/json
+
+{
+  "removeCartItemId":"b8b7e82c-310a-46a9-b72a-e20568ff1d43"
+}
 
 # -------------------------------------
 # ADMIN
