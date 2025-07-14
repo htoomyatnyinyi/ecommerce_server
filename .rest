@@ -93,38 +93,61 @@ Content-Type: application/json
     }
   ]
 }
+
 ###
 GET http://localhost:8080/api/products
-
 ###
 GET http://localhost:8080/api/cart
-
 ###
 POST http://localhost:8080/api/cart
 Content-Type: application/json
 
-# {
-#   "productId": "bccd5179-77a3-443d-82c1-4696349fc413", 
-#   "variantId": "a14e9c55-9a6d-42c5-ad66-66b91165103f",
-#   "quantity": 1
-# }
-
 {
-  "productId": "5e81a089-343e-4258-a8ef-7ac1b03b1988", 
-  "variantId": "2f2da615-d4fe-4797-a41c-bebae3ae6f75",
+  "productId": "bccd5179-77a3-443d-82c1-4696349fc413", 
+  "variantId": "a14e9c55-9a6d-42c5-ad66-66b91165103f",
   "quantity": 1
 }
 
+#   "variantId": "cfa12e3d-6c2d-418f-991e-58687c4e7531",
+
+# {
+#   "productId": "5e81a089-343e-4258-a8ef-7ac1b03b1988", 
+#   "variantId": "2f2da615-d4fe-4797-a41c-bebae3ae6f75",
+#   "quantity": 1
+# }
+
   # "variantId": "457a680c-75ee-4014-8f1d-689e7c930fdd",
 ###
-DELETE http://localhost:8080/api/cart/5e81a089-343e-4258-a8ef-7ac1b03b1988
+DELETE http://localhost:8080/api/cart
+Content-Type: application/json
+
+{
+  "removeCartItemId": "fb34f7c4-ff20-408b-a7ab-2c0a26b4fbc5"
+}
+
+# {
+#   "removeCartItemId": "28c9a960-e8b8-436f-98d8-fe60c42422c8"
+# }
+
 ###
 POST http://localhost:8080/api/cart/cart-total
 Content-Type: application/json
 
 {
-  "itemId": "f9658ba3-5ef2-465b-b384-ad0d4c8957bc"
+  "cartId": "434a7e7a-04f7-42ca-90b7-5a2ab02f7ed7"
 }
+
+# {
+#   "itemId": "6bb7dd1c-dfa1-449f-8b8f-379b2f077b1c"
+# }
+
+###
+# POST http://localhost:8080/api/cart/cart-total
+# Content-Type: application/json
+
+# {
+#   "cartId": "fb34f7c4-ff20-408b-a7ab-2c0a26b4fbc5"
+# }
 
 
 # -------------------------------------
@@ -160,17 +183,17 @@ Content-Type: application/json
 
 ### Get Cart
 GET http://localhost:8080/api/cart
-
 ### Add Item to Cart
 POST http://localhost:8080/api/cart/items
 Content-Type: application/json
 
 {
   "productId": "420d44d8-152c-41a8-a72e-af4bd8256cda",
-  "variantId": "7bd2d276-7a0f-47a1-89d1-dc0588d33adb",
-  "quantity": 5
+  "variantId": "4cfd967c-1f60-4025-ae8a-63ab3e2d5dfc",
+  "quantity": 1
 }
 
+  # "variantId": "7bd2d276-7a0f-47a1-89d1-dc0588d33adb",
 # {
 #   "productId": "8d242bb1-25af-426f-a926-ddb3574599c5",
 #   "variantId": "508f8f8d-b1ad-40b6-a438-9e2c8c708495",
@@ -178,13 +201,22 @@ Content-Type: application/json
 # }
 
 ### Update Cart Item Quantity
-# Assuming the cart item ID is 'cart-item-id-123'
-PATCH http://localhost:8080/api/cart/items/cart-item-id-123
+PUT http://localhost:8080/api/cart/items
 Content-Type: application/json
 
 {
+  "cartItemId":"63b6f49a-3ea1-48c9-9084-b06c50b06e6d",
   "quantity": 3
 }
+
+# Assuming the cart item ID is 'cart-item-id-123'
+# PUT http://localhost:8080/api/cart/items/cart-item-id-123
+# Content-Type: application/json
+
+# {
+#   "quantity": 3
+# }
+
 
 ### Remove Item from Cart
 # Assuming the cart item ID is 'cart-item-id-123'
@@ -195,7 +227,7 @@ DELETE http://localhost:8080/api/cart
 Content-Type: application/json
 
 {
-  "removeCartItemId":"b8b7e82c-310a-46a9-b72a-e20568ff1d43"
+  "removeCartItemId":"4cfd967c-1f60-4025-ae8a-63ab3e2d5dfc"
 }
 
 # -------------------------------------

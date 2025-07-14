@@ -64,7 +64,7 @@ const handleRefreshToken = async (
   const cookies = req.cookies as AuthCookies;
   const refreshToken = cookies.refresh_id;
 
-  console.log(" when token expier this console will run");
+  console.log("WHEN handleRefreshToken - Cookies received:", req.cookies);
 
   if (!refreshToken) {
     res.status(401).json({

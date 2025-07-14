@@ -184,27 +184,98 @@ const removeCart = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-const cartTotal = async (req: Request, res: Response): Promise<any> => {
-  const { cartId } = req.body;
-  // console.log(cartId, req.body);
+const updateCart = async (req: Request, res: Response): Promise<any> => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res
+      .status(401)
+      .json({ error: "Unauthorized: User not authenticated." });
+  }
+
+  const { cartItemId, quantity } = req.body;
+  if (!cartItemId || !quantity) {
+    return res
+      .status(400)
+      .json({ error: "Cart item ID and quantity are required." });
+  }
 
   try {
-    const cartItems = await prisma.cartItem.findMany({
-      where: { id: cartId },
-      include: { product: true, variant: true },
+    const updatedCartItem = await prisma.cartItem.update({
+      where: { id: cartItemId, cart: { userId } },
+      data: { quantity },
     });
 
-    console.log(cartItems);
-    let totalPrice = 0;
-    cartItems.forEach((item) => {
-      const price = Number(item.variant?.price) || 0;
-      const quantity = Number(item.quantity) || 0;
-      totalPrice += price * quantity;
-    });
-    res.status(201).json(totalPrice);
+    res.status(200).json({ success: true, updatedCartItem });
   } catch (error) {
     console.error(error);
   }
 };
 
-export { addToCart, getCart, removeCart, cartTotal };
+const cartTotal = async (req: Request, res: Response): Promise<any> => {
+  const { cartId } = req.body;
+  // console.log(cartId, req.body);
+
+  if (!cartId) return res.status(400).json({ error: "Cart ID is required." });
+
+  try {
+    const cartItems = await prisma.cart.findMany({
+      where: { id: cartId },
+      include: {
+        items: {
+          include: { variant: true },
+        },
+      },
+    });
+
+    // console.log(cartItems, cartItems[0]?.items, "cartItems");
+
+    let totalPrice = 0;
+
+    cartItems[0]?.items.forEach((item) => {
+      const price = Number(item.variant?.price) || 0;
+      const quantity = Number(item.quantity) || 0;
+      totalPrice += price * quantity;
+    });
+
+    console.log(totalPrice, "totalPrice");
+
+    res.status(201).json({ totalPrice, cartItems: cartItems[0]?.items });
+  } catch (error) {
+    console.error(error);
+  }
+};
+// wron
+// uncomment if you want to use this function
+// This function calculates the total price of items in a cart based on the cart ID.
+// It retrieves the cart items, calculates the total price by multiplying the price of each variant by
+// const cartTotal = async (req: Request, res: Response): Promise<any> => {
+//   const { cartId } = req.body;
+//   // console.log(cartId, req.body);
+
+//   if (!cartId) return res.status(400).json({ error: "Cart ID is required." });
+
+//   try {
+//     const cartItems = await prisma.cartItem.findMany({
+//       where: { id: cartId },
+//       include: { product: true, variant: true },
+//     });
+
+//     // console.log(cartItems);
+
+//     let totalPrice = 0;
+
+//     cartItems.forEach((item) => {
+//       const price = Number(item.variant?.price) || 0;
+//       const quantity = Number(item.quantity) || 0;
+//       totalPrice += price * quantity;
+//     });
+
+//     console.log(totalPrice, "totalPrice");
+
+//     res.status(201).json({ totalPrice, cartItems });
+//   } catch (error) {
+//     console.error(error);
+//   }
+// };
+
+export { addToCart, getCart, removeCart, updateCart, cartTotal };

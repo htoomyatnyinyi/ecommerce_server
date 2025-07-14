@@ -184,7 +184,7 @@ export const getProducts = async (
         [sortBy]: sortOrder,
       },
     });
-    console.log(responseProducts);
+    // console.log(responseProducts);
 
     res.status(200).json({
       queryParams: req.query,
