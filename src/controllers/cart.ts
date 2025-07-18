@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../config/database";
+
 interface CartItem {
   productId: string;
   variantId: string;
@@ -117,6 +118,7 @@ const addToCart = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
+// Get the user's cart
 const getCart = async (req: Request, res: Response): Promise<any> => {
   const userId = req.user?.id; // Assuming user ID is stored in req.user
   if (!userId) {
@@ -151,6 +153,11 @@ const getCart = async (req: Request, res: Response): Promise<any> => {
     // res.json(getCart);
     // If you want to return the cart items without product and variant details
     // res.json(getCart.map(cart => cart.items));
+
+    // If you want to return the items only
+    const a = getCart.map((cart) => cart.items);
+    console.log({ ...a[0] }, "getCart items");
+
     // console.log({ ...getCart });
     res.status(200).json(getCart);
   } catch (error) {
@@ -158,6 +165,7 @@ const getCart = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
+// Remove an item from the cart
 const removeCart = async (req: Request, res: Response): Promise<any> => {
   const userId = req.user?.id;
   if (!userId) {
@@ -184,6 +192,7 @@ const removeCart = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
+// Update the quantity of an item in the cart
 const updateCart = async (req: Request, res: Response): Promise<any> => {
   const userId = req.user?.id;
   if (!userId) {
@@ -211,6 +220,7 @@ const updateCart = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
+// total price of items in a cart based on the cart ID.
 const cartTotal = async (req: Request, res: Response): Promise<any> => {
   const { cartId } = req.body;
   // console.log(cartId, req.body);
@@ -244,7 +254,8 @@ const cartTotal = async (req: Request, res: Response): Promise<any> => {
     console.error(error);
   }
 };
-// wron
+
+// wrong function name, it should be cartTotal
 // uncomment if you want to use this function
 // This function calculates the total price of items in a cart based on the cart ID.
 // It retrieves the cart items, calculates the total price by multiplying the price of each variant by

@@ -9,9 +9,9 @@ Content-Type: application/json
 
 {
   "username": "taco",
-  "email": "rovover284@hosliy.com",
-  "password": "htoomyat",
-  "confirmPassword": "htoomyat"
+  "email": "taco@mail.com",
+  "password": "tacota",
+  "confirmPassword": "tacota"
 }
 
 ### User Signin
@@ -20,8 +20,8 @@ POST http://localhost:8080/api/auth/signin
 Content-Type: application/json
 
 {
-  "email": "rovover284@hosliy.com",
-  "password": "htoomyat"
+  "email": "taco@mail.com",
+  "password": "tacota"
 }
 
 ### Get Authenticated User
@@ -65,21 +65,21 @@ POST http://localhost:8080/api/products
 Content-Type: application/json
 
 {
-  "title": "Premium T-Shirt 2",
-  "description": "100% organic cotton la",
+  "title": "Premium T-Shirt ",
+  "description": "100% cotton la",
   "brandName": "EcoWear",
-  "categoryId": "687ab86f-39aa-4445-bc93-cb60a567866a",
+  "categoryId": "34b8adf3-693e-4d8f-aa2a-51063c4ee2a7",
   "variants": [
     {
-      "sku": "ECO-TS-BLK-S",
-      "price": 28,
+      "sku": "ECO-TS-C-S",
+      "price": 10800,
       "stock": 100,
       "color": "Black",
       "size": "M"
     },
     {
-      "sku": "ECO-TS-BLK-XL",
-      "price": 30,
+      "sku": "ECO-TS-C-XL",
+      "price": 10000,
       "stock": 80,
       "color": "White",
       "size": "L"
@@ -149,34 +149,6 @@ Content-Type: application/json
 #   "cartId": "fb34f7c4-ff20-408b-a7ab-2c0a26b4fbc5"
 # }
 
-
-# -------------------------------------
-# CATEGORIES & BRANDS
-# -------------------------------------
-
-### Get All Categories
-GET http://localhost:8080/api/category
-
-### Create Category (Admin Only)
-POST http://localhost:8080/api/category
-Content-Type: application/json
-
-{
-  "name": "T-Shirt"
-}
-
-  # "categoryName": "Apparels"
-### Get All Brands
-GET http://localhost:8080/api/brands
-
-### Create Brand (Admin Only)
-POST http://localhost:8080/api/brands
-Content-Type: application/json
-
-{
-  "brandName": "EcoWear"
-}
-
 # -------------------------------------
 # CART
 # -------------------------------------
@@ -245,6 +217,33 @@ Content-Type: application/json
 
 {
   "role": "ADMIN"
+}
+
+# -------------------------------------
+# CATEGORIES & BRANDS
+# -------------------------------------
+
+### Get All Categories
+GET http://localhost:8080/api/category
+
+### Create Category (Admin Only)
+POST http://localhost:8080/api/category
+Content-Type: application/json
+
+{
+  "name": "T-Shirt"
+}
+
+  # "categoryName": "Apparels"
+### Get All Brands
+GET http://localhost:8080/api/brands
+
+### Create Brand (Admin Only)
+POST http://localhost:8080/api/brands
+Content-Type: application/json
+
+{
+  "brandName": "EcoWear"
 }
 
 ### Delete a User (Admin Only)

@@ -188,6 +188,7 @@ export const getProducts = async (
 
     res.status(200).json({
       queryParams: req.query,
+      // products: { ...responseProducts },
       responseProducts,
       pagination: {
         total: totalCount,

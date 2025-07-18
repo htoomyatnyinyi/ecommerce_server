@@ -9,6 +9,15 @@ datasource db {
 }
 
 
+// generator client {
+//   provider = "prisma-client-js"
+// }
+
+// datasource db {
+//   provider  = "postgresql"
+//   url       = env("DATABASE_URL")
+//   directUrl = env("DIRECT_URL")
+// }
 
 model User {
   id            String         @id @default(uuid())
@@ -153,7 +162,6 @@ model CartItem {
   variant   Variant  @relation(fields: [variantId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
 }
 
 model Order {
@@ -207,7 +215,8 @@ model Review {
   id        String   @id @default(uuid())
   userId    String
   productId String
-  rating    Int      @db.TinyInt
+  rating    Int      
+  // rating    Int      @db.TinyInt
   comment   String?  @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
