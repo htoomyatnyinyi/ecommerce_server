@@ -43,6 +43,7 @@ const addToCart = async (req: Request, res: Response): Promise<any> => {
     // console.log(existingItem, "eistingItem");
 
     let cartItem;
+
     if (existingItem) {
       // update quantity
       // console.log(existingItem, "alredy existing cart");
@@ -129,40 +130,103 @@ const getCart = async (req: Request, res: Response): Promise<any> => {
   // console.log("User ID:", userId);
 
   try {
-    const getCart = await prisma.cart.findMany({
+    const getCart = await prisma.cartItem.findMany({
+      // include: {
+      // items: {
+      //   include: {
+      //     // product: {
+      //     //   select: { title: true, description: true },
+      //     // },
+      //     product: true,
+      //     // variant: {
+      //     //   select: { sku: true, stock: true, price: true },
+      //     // },
+      //     variant: true,
+      //   },
+      // },
+      // },
       include: {
-        items: {
+        product: {
           include: {
-            // product: {
-            //   select: { title: true, description: true },
-            // },
-            product: true,
-            // variant: {
-            //   select: { sku: true, stock: true, price: true },
-            // },
-            variant: true,
+            images: true,
           },
         },
+        variant: true, // Include variant details if needed
       },
+      where: { cart: { userId } },
+      // orderBy: { createdAt: "desc" }, // Optional: Order by creation date
     });
     // console.log(getCart, "getCart");
-    if (!getCart || getCart.length === 0) {
-      return res.status(404).json({ message: "Cart is empty" });
-    }
-    // If you want to return the cart items with product and variant details
-    // res.json(getCart);
-    // If you want to return the cart items without product and variant details
-    // res.json(getCart.map(cart => cart.items));
 
-    // If you want to return the items only
-    const a = getCart.map((cart) => cart.items);
-    console.log({ ...a[0] }, "getCart items");
+    let totalPrice = 0;
+    let totalQuantity = 0;
 
-    // console.log({ ...getCart });
-    res.status(200).json(getCart);
+    getCart.forEach((item) => {
+      console.log(item, "for each");
+      const price = Number(item.variant?.price) || 0;
+      const quantity = Number(item.quantity) || 0;
+
+      totalPrice += price * quantity;
+      totalQuantity += quantity;
+    });
+
+    // console.log(totalPrice, "totalPrice");
+
+    // // console.log(getCart, "getCart");
+    // if (!getCart || getCart.length === 0) {
+    //   return res.status(404).json({ message: "Cart is empty" });
+    // }
+    // // If you want to return the cart items with product and variant details
+    // // res.json(getCart);
+    // // If you want to return the cart items without product and variant details
+    // // res.json(getCart.map(cart => cart.items));
+
+    // // If you want to return the items only
+    // const a = getCart.map((cart) => cart.items);
+    // console.log({ ...a[0] }, "getCart items");
+
+    // // console.log({ ...getCart });
+    res.status(200).json({ getCart, totalPrice, totalQuantity });
   } catch (error) {
     console.error(error);
   }
+
+  // before make a return data change.
+  // try {
+  //   const getCart = await prisma.cart.findMany({
+  //     include: {
+  //       items: {
+  //         include: {
+  //           // product: {
+  //           //   select: { title: true, description: true },
+  //           // },
+  //           product: true,
+  //           // variant: {
+  //           //   select: { sku: true, stock: true, price: true },
+  //           // },
+  //           variant: true,
+  //         },
+  //       },
+  //     },
+  //   });
+  //   // console.log(getCart, "getCart");
+  //   if (!getCart || getCart.length === 0) {
+  //     return res.status(404).json({ message: "Cart is empty" });
+  //   }
+  //   // If you want to return the cart items with product and variant details
+  //   // res.json(getCart);
+  //   // If you want to return the cart items without product and variant details
+  //   // res.json(getCart.map(cart => cart.items));
+
+  //   // If you want to return the items only
+  //   const a = getCart.map((cart) => cart.items);
+  //   console.log({ ...a[0] }, "getCart items");
+
+  //   // console.log({ ...getCart });
+  //   res.status(200).json(getCart);
+  // } catch (error) {
+  //   console.error(error);
+  // }
 };
 
 // Remove an item from the cart
@@ -175,9 +239,10 @@ const removeCart = async (req: Request, res: Response): Promise<any> => {
   }
 
   const { removeCartItemId } = req.body;
+  console.log(removeCartItemId, "removeCartItemId", req.body);
   // const removeCartItemId = req.params.id;
 
-  console.log(removeCartItemId, "removeCartItemId", req.body);
+  // console.log(removeCartItemId, "removeCartItemId", req.body);
 
   try {
     const removedCartItem = await prisma.cartItem.delete({
@@ -201,6 +266,7 @@ const updateCart = async (req: Request, res: Response): Promise<any> => {
       .json({ error: "Unauthorized: User not authenticated." });
   }
 
+  // console.log(req.body, "updateCart body");
   const { cartItemId, quantity } = req.body;
   if (!cartItemId || !quantity) {
     return res

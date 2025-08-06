@@ -56,7 +56,10 @@ GET http://localhost:8080/api/products?search=shirt
 ###
 GET http://localhost:8080/api/products?category=Clothing
 ###
-GET http://localhost:8080/api/products/420d44d8-152c-41a8-a72e-af4bd8256cda
+GET http://localhost:8080/api/products/8a3d6050-98f8-4943-8e8e-5708fdd8f25d
+
+###
+GET http://localhost:8080/api/product/e8ffa06e-b98e-4a63-9fff-471b7f868cb5
 ###
 ### Get Product by ID
 
@@ -65,20 +68,20 @@ POST http://localhost:8080/api/products
 Content-Type: application/json
 
 {
-  "title": "Premium T-Shirt ",
-  "description": "100% cotton la",
+  "title": "Pic ",
+  "description": "this is description",
   "brandName": "EcoWear",
   "categoryId": "34b8adf3-693e-4d8f-aa2a-51063c4ee2a7",
   "variants": [
     {
-      "sku": "ECO-TS-C-S",
+      "sku": "ECO-TS-R-S",
       "price": 10800,
       "stock": 100,
       "color": "Black",
       "size": "M"
     },
     {
-      "sku": "ECO-TS-C-XL",
+      "sku": "ECO-TS-R-M",
       "price": 10000,
       "stock": 80,
       "color": "White",
@@ -87,12 +90,19 @@ Content-Type: application/json
   ],
   "images": [
     {
-      "url": "https://images.pexels.com/photos/842711/pexels-photo-842711.jpeg",
+      "url": "https://images.pexels.com/photos/807598/pexels-photo-807598.jpeg",
+      "altText": "A black t-shirt",
+      "isPrimary": true
+    },
+    {
+      "url": "https://images.pexels.com/photos/325044/pexels-photo-325044.jpeg",
       "altText": "A black t-shirt",
       "isPrimary": true
     }
   ]
 }
+
+      # "url": "https://images.pexels.com/photos/842711/pexels-photo-842711.jpeg",
 
 ###
 GET http://localhost:8080/api/products
@@ -103,8 +113,8 @@ POST http://localhost:8080/api/cart
 Content-Type: application/json
 
 {
-  "productId": "bccd5179-77a3-443d-82c1-4696349fc413", 
-  "variantId": "a14e9c55-9a6d-42c5-ad66-66b91165103f",
+  "productId": "e8ffa06e-b98e-4a63-9fff-471b7f868cb5", 
+  "variantId": "5cb9de08-3316-4cae-bf9e-3b0b7947f188",
   "quantity": 1
 }
 
@@ -121,8 +131,9 @@ Content-Type: application/json
 DELETE http://localhost:8080/api/cart
 Content-Type: application/json
 
+
 {
-  "removeCartItemId": "fb34f7c4-ff20-408b-a7ab-2c0a26b4fbc5"
+  "removeCartItemId": "10181237-6f97-4120-b4ec-51e9dc6997c4"
 }
 
 # {
@@ -199,7 +210,7 @@ DELETE http://localhost:8080/api/cart
 Content-Type: application/json
 
 {
-  "removeCartItemId":"4cfd967c-1f60-4025-ae8a-63ab3e2d5dfc"
+  "removeCartItemId":"12e917b3-e876-48b4-ae6e-8ad078cfa432"
 }
 
 # -------------------------------------

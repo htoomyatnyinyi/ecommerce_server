@@ -14,7 +14,6 @@ router.post("/", authenticated, addToCart);
 router.get("/", authenticated, getCart);
 router.post("/cart-total", authenticated, cartTotal);
 router.delete("/", authenticated, removeCart);
-router.put("/items", authenticated, updateCart);
-// router.get("/", authenticated, getCartItem);
+router.put("/quantity", authenticated, updateCart);
 
 export default router;
