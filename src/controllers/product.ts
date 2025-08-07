@@ -178,6 +178,7 @@ export const getProducts = async (
       include: {
         images: {
           select: {
+            id: true,
             url: true,
             altText: true,
             isPrimary: true,

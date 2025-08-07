@@ -105,6 +105,59 @@ Content-Type: application/json
       # "url": "https://images.pexels.com/photos/842711/pexels-photo-842711.jpeg",
 
 ###
+POST  http://localhost:8080/api/order/checkout
+Content-Type: application/json
+
+{
+  "shippingAddressId": "324lkjkl",
+  "billingAddressId": "klfkl",
+  "paymentMethod": "CASH_ON_DELIVERY" 
+}
+
+
+# {
+#   "productId": "1323",
+#   "variantId": "456",
+#   "totalQuantity": 4,
+#   "totalPrice": 103000,
+#   "shippingAddress": "b772e661-eac6-42ca-9601-4f14a0261d01",
+#   "billingAddress": "b772e661-eac6-42ca-9601-4f14a0261d01"
+
+# }
+
+
+###
+GET http://localhost:8080/api/address
+
+###
+POST http://localhost:8080/api/address
+Content-Type: application/json
+
+{
+  "street": "Main Road",
+  "state": "Mon State",
+  "city": "Moulmein",
+  "country": "Myanmar",
+  "postalCode": "324333",
+  "isDefault": true,
+}
+
+###
+DELETE http://localhost:8080/api/address/4e0432c4-b74a-4a1b-b2e3-706c99ad5d43
+
+###
+GET http://localhost:8080/api/payment
+###
+POST http://localhost:8080/api/payment
+Content-Type: application/json
+
+{
+  "orderId": "3423",
+  "amount": 20000,
+  "paymentMethod": "CASH_ON_DELEVERY",
+  "transactionId": "3243faff"
+}
+###
 GET http://localhost:8080/api/products
 ###
 GET http://localhost:8080/api/cart
