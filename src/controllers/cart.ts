@@ -186,6 +186,7 @@ const getCart = async (req: Request, res: Response): Promise<any> => {
     // console.log({ ...a[0] }, "getCart items");
 
     // // console.log({ ...getCart });
+
     res.status(200).json({ getCart, totalPrice, totalQuantity });
   } catch (error) {
     console.error(error);
