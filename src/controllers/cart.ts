@@ -112,7 +112,27 @@ const addToCart = async (req: Request, res: Response): Promise<any> => {
       //     },
       //   },
       // });
-      res.json(cartItem);
+
+      const addToOrderItem = await prisma.orderItem.create({
+        data: {
+          // productId,
+          // variantId,
+          product: { connect: { id: productId } },
+          variant: { connect: { id: variantId } },
+          quantity,
+          price: 1000 * quantity, // Replace 1000 with actual price if available
+          order: {
+            create: {
+              userId,
+              totalPrice: 1000 * quantity, // Replace 1000 with actual price if available
+              // shippingAddressId: "some-shipping-address-id", // Add shipping address ID if available
+            },
+          },
+        },
+      });
+      console.log(addToOrderItem, "addToOrderItem");
+
+      res.status(200).json(cartItem);
     }
   } catch (error) {
     res.status(500).json({ msg: "error" });

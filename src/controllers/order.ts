@@ -147,14 +147,16 @@ export const createOrder = async (
 //   }
 // };
 
-export const order = async (req: Request, res: Response): Promise<any> => {
-  const userId = req.user?.id;
-  if (!userId) {
-    return res
-      .status(401)
-      .json({ message: "Unauthorized: User not authenticated" });
-  }
-};
+// #### note
+
+// export const order = async (req: Request, res: Response): Promise<any> => {
+//   const userId = req.user?.id;
+//   if (!userId) {
+//     return res
+//       .status(401)
+//       .json({ message: "Unauthorized: User not authenticated" });
+//   }
+// };
 
 // export const order = async (req: Request, res: Response): Promise<any> => {
 //   const userId = req.user?.id;
@@ -187,16 +189,17 @@ export const order = async (req: Request, res: Response): Promise<any> => {
 //   }
 // };
 
-export const checkout = async (req: Request, res: Response): Promise<any> => {
-  try {
-    const categoryResponse = await prisma.category.findMany();
-    res.status(200).json(categoryResponse);
-  } catch (error) {
-    console.error("Error fetching products:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch category",
-      error: process.env.NODE_ENV === "dewwwvelopment" ? error : undefined,
-    });
-  }
-};
+// ### note
+// export const checkout = async (req: Request, res: Response): Promise<any> => {
+//   try {
+//     const categoryResponse = await prisma.category.findMany();
+//     res.status(200).json(categoryResponse);
+//   } catch (error) {
+//     console.error("Error fetching products:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Failed to fetch category",
+//       error: process.env.NODE_ENV === "dewwwvelopment" ? error : undefined,
+//     });
+//   }
+// };

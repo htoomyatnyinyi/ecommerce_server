@@ -68,10 +68,10 @@ POST http://localhost:8080/api/products
 Content-Type: application/json
 
 {
-  "title": "Pic ",
+  "title": "SaKaWar Flower",
   "description": "this is description",
   "brandName": "EcoWear",
-  "categoryId": "a3815553-8748-43be-ac2c-26a484891eac",
+  "categoryId": "423d3843-7d7d-4efc-9528-11616e3baddd",
   "variants": [
     {
       "sku": "ECO-TS-R-S",
@@ -146,7 +146,7 @@ POST http://localhost:8080/api/address
 Content-Type: application/json
 
 {
-  "street": "Main Road",
+  "street": "No. 12, Main Road",
   "state": "Mon State",
   "city": "Moulmein",
   "country": "Myanmar",
@@ -169,6 +169,9 @@ Content-Type: application/json
   "paymentMethod": "CASH_ON_DELEVERY",
   "transactionId": "3243faff"
 }
+###
+
+GET http://localhost:8080
 ###
 GET http://localhost:8080/api/products
 ###
@@ -231,6 +234,8 @@ Content-Type: application/json
 
 ### Get Cart
 GET http://localhost:8080/api/cart
+
+
 ### Add Item to Cart
 POST http://localhost:8080/api/cart/items
 Content-Type: application/json
@@ -254,7 +259,7 @@ Content-Type: application/json
 
 {
   "cartItemId":"63b6f49a-3ea1-48c9-9084-b06c50b06e6d",
-  "quantity": 3
+  "quantity": 1
 }
 
 # Assuming the cart item ID is 'cart-item-id-123'
