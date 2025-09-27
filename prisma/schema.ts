@@ -1,0 +1,250 @@
+// generator client {
+//   provider = "prisma-client-js"
+// }
+
+// datasource db {
+//   provider = "mysql"
+//   url      = env("DATABASE_URL")
+// }
+
+// model User {
+//   id            String         @id @default(uuid())
+//   username      String         @unique
+//   email         String         @unique
+//   password      String
+//   googleId      String?        @unique // Add for Google OAuth
+//   role          Role           @default(USER)
+//   isEmailVerified Boolean      @default(false)
+//   carts         Cart[]
+//   orders        Order[]
+//   addresses     Address[]
+//   reviews       Review[]
+//   products      Product[]      // Added: Opposite relation for Product
+//   emailVerificationTokens EmailVerificationToken[] // Add relation for email verify
+//   passwordResetTokens PasswordResetToken[] // Add relation for password reset
+//   createdAt     DateTime       @default(now())
+//   updatedAt     DateTime       @updatedAt
+// }
+
+// model PasswordResetToken {
+//   id        String   @id @default(uuid())
+//   token     String   @unique
+//   userId    String
+//   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+//   expiresAt DateTime
+//   createdAt DateTime @default(now())
+// }
+
+// model EmailVerificationToken {
+//   id        String   @id @default(uuid())
+//   token     String   @unique
+//   userId    String
+//   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+//   expiresAt DateTime
+//   createdAt DateTime @default(now())
+// }
+
+// model Product {
+//   id            String          @id @default(uuid())
+//   title         String
+//   description   String          @db.Text
+//   variants      Variant[]
+//   images        Image[]
+//   cartItems     CartItem[]
+//   orderItems    OrderItem[]
+//   productBrands ProductBrands[]
+//   reviews       Review[]
+//   categoryId    String // at user input form generate with list if already create or create actjio0n there.
+//   category      Category?       @relation(fields: [categoryId], references: [id])
+//   userId        String
+//   user          User            @relation(fields: [userId], references: [id])
+//   createdAt     DateTime        @default(now())
+//   updatedAt     DateTime        @updatedAt
+//   @@index([title])
+// }
+
+// model ProductBrands {
+//   id        String      @id @default(uuid())
+//   brandId   String
+//   brand     Brand       @relation(fields: [brandId], references: [id])
+//   productId String
+//   product   Product     @relation(fields: [productId], references: [id])
+// }
+
+// model Brand {
+//   id         String          @id @default(uuid())
+//   brandName  String          @unique
+//   productBrand ProductBrands[]
+//   createdAt DateTime  @default(now())
+//   updatedAt DateTime  @updatedAt
+// }
+
+// // can get products data by categoryName
+// model Category {
+//   id           String       @id @default(uuid())
+//   categoryName String       @unique
+//   products     Product[]
+//   createdAt DateTime  @default(now())
+//   updatedAt DateTime  @updatedAt
+// }
+
+// model Variant {
+//   id             String          @id @default(uuid())
+//   sku            String          @unique
+//   price          Decimal         @db.Decimal(10, 2)
+//   discountPrice  Decimal?        @db.Decimal(10, 2)
+//   stock          Int?
+//   cartItems      CartItem[]
+//   orderItems     OrderItem[]
+//   productId      String
+//   product        Product         @relation(fields: [productId], references: [id])
+//   variantOptions VariantOption[]
+//   createdAt      DateTime        @default(now())
+//   updatedAt      DateTime        @updatedAt
+//   @@index([sku])
+// }
+
+// model VariantOption {
+//   id             String   @id @default(uuid())
+//   attributeName  String
+//   attributeValue String
+//   attributeStock Int?
+//   variantId      String
+//   variant        Variant  @relation(fields: [variantId], references: [id])
+//   createdAt      DateTime @default(now())
+//   updatedAt      DateTime @updatedAt
+// }
+
+// model Image {
+//   id        String   @id @default(uuid())
+//   url       String
+//   altText   String
+//   isPrimary Boolean  @default(false)
+//   productId String
+//   product   Product  @relation(fields: [productId], references: [id])
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
+
+// model Cart {
+//   id        String     @id @default(uuid())
+//   items     CartItem[]
+//   userId    String
+//   user      User       @relation(fields: [userId], references: [id])
+//   createdAt DateTime   @default(now())
+//   updatedAt DateTime   @updatedAt
+// }
+
+// model CartItem {
+//   id        String   @id @default(uuid())
+//   quantity  Int
+//   cartId    String
+//   cart      Cart     @relation(fields: [cartId], references: [id])
+//   productId String
+//   product   Product  @relation(fields: [productId], references: [id])
+//   variantId String
+//   variant   Variant  @relation(fields: [variantId], references: [id])
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
+
+// model Order {
+//   id                String           @id @default(uuid())
+//   userId            String
+//   totalPrice        Decimal          @db.Decimal(10, 2)
+//   status            OrderStatus      @default(PENDING)
+//   shippingAddressId String?
+//   billingAddressId  String?
+//   paymentId         String?          @unique // Ensure one-to-one relation
+//   shippingAddress   Address?         @relation(fields: [shippingAddressId], references: [id], name: "ShippingAddress")
+//   billingAddress    Address?         @relation(fields: [billingAddressId], references: [id], name: "BillingAddress")
+//   payment           Payment?         @relation(fields: [paymentId], references: [id])
+//   items             OrderItem[]
+//   user              User             @relation(fields: [userId], references: [id])
+//   createdAt         DateTime         @default(now())
+//   updatedAt         DateTime         @updatedAt
+// }
+
+// model OrderItem {
+//   id        String   @id @default(uuid())
+//   orderId   String
+//   productId String
+//   variantId String
+//   quantity  Int
+//   price     Decimal  @db.Decimal(10, 2)
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+//   order     Order    @relation(fields: [orderId], references: [id])
+//   product   Product  @relation(fields: [productId], references: [id])
+//   variant   Variant  @relation(fields: [variantId], references: [id])
+// }
+
+// model Address {
+//   id             String   @id @default(uuid())
+//   userId         String
+//   user           User     @relation(fields: [userId], references: [id])
+//   street         String
+//   city           String
+//   state          String?
+//   country        String
+//   postalCode     String
+//   isDefault      Boolean  @default(false)
+//   createdAt      DateTime @default(now())
+//   updatedAt      DateTime @updatedAt
+//   ordersShipping Order[]  @relation("ShippingAddress")
+//   ordersBilling  Order[]  @relation("BillingAddress")
+// }
+
+// model Review {
+//   id        String   @id @default(uuid())
+//   userId    String
+//   productId String
+//   rating    Int      @db.TinyInt
+//   comment   String?  @db.Text
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+//   user      User     @relation(fields: [userId], references: [id])
+//   product   Product  @relation(fields: [productId], references: [id])
+// }
+
+// model Payment {
+//   id             String        @id @default(uuid())
+//   orderId        String        @unique
+//   amount         Decimal       @db.Decimal(10, 2)
+//   paymentMethod  PaymentMethod
+//   paymentStatus  PaymentStatus @default(PENDING)
+//   transactionId  String?
+//   createdAt      DateTime      @default(now())
+//   updatedAt      DateTime      @updatedAt
+//   order          Order?        @relation() // Removed fields and references
+// }
+
+// enum Role {
+//   ADMIN
+//   USER
+//   EMPLOYER
+// }
+
+// enum PaymentMethod {
+//   CREDIT_CARD
+//   DEBIT_CARD
+//   PAYPAL
+//   BANK_TRANSFER
+//   CASH_ON_DELIVERY
+// }
+
+// enum PaymentStatus {
+//   PENDING
+//   COMPLETED
+//   FAILED
+//   REFUNDED
+// }
+
+// enum OrderStatus {
+//   PENDING
+//   PROCESSING
+//   SHIPPED
+//   DELIVERED
+//   CANCELLED
+//   RETURNED
+// }

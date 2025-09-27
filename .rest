@@ -9,9 +9,9 @@ Content-Type: application/json
 
 {
   "username": "taco",
-  "email": "tacokoj681@linacit.com",
-  "password": "htoomyat",
-  "confirmPassword": "htoomyat"
+  "email": "taco@mail.com",
+  "password": "tacota",
+  "confirmPassword": "tacota"
 }
 
 ### User Signin
@@ -20,8 +20,8 @@ POST http://localhost:8080/api/auth/signin
 Content-Type: application/json
 
 {
-  "email": "tacokoj681@linacit.com",
-  "password": "htoomyat"
+  "email": "taco@mail.com",
+  "password": "tacota"
 }
 
 ### Get Authenticated User
@@ -39,7 +39,7 @@ POST http://localhost:8080/api/auth/request-password-reset
 Content-Type: application/json
 
 {
-  "email": "tacokoj681@linacit.com"
+  "email": "rovover284@hosliy.com"
 }
 
 # -------------------------------------
@@ -51,63 +51,182 @@ GET http://localhost:8080/api/products?search=shirt&sortBy=price&sortOrder=asc
 
 ###
 GET http://localhost:8080/api/products
+###
+GET http://localhost:8080/api/products?search=shirt
+###
+GET http://localhost:8080/api/products?category=Clothing
+###
+GET http://localhost:8080/api/products/8a3d6050-98f8-4943-8e8e-5708fdd8f25d
+
+###
+GET http://localhost:8080/api/product/e8ffa06e-b98e-4a63-9fff-471b7f868cb5
+###
 ### Get Product by ID
-GET http://localhost:8080/api/products/8d242bb1-25af-426f-a926-ddb3574599c5
 
 ### Create Product (Admin/Employer Only)
 POST http://localhost:8080/api/products
 Content-Type: application/json
 
 {
-  "title": "Premium T-Shirt",
-  "description": "100% organic cotton",
+  "title": "SaKaWar Flower",
+  "description": "this is description",
   "brandName": "EcoWear",
-  "categoryId": "518763f0-7838-40a8-a28c-15825610be82",
+  "categoryId": "423d3843-7d7d-4efc-9528-11616e3baddd",
   "variants": [
     {
-      "sku": "ECO-TS-BLK-M",
-      "price": 25.50,
+      "sku": "ECO-TS-R-S",
+      "price": 10800,
       "stock": 100,
-      "variantOptions": [
-        { "attributeName": "color", "attributeValue": "black" },
-        { "attributeName": "size", "attributeValue": "M" }
-      ]
+      "color": "Black",
+      "size": "M"
+    },
+    {
+      "sku": "ECO-TS-R-M",
+      "price": 10000,
+      "stock": 80,
+      "color": "White",
+      "size": "L"
     }
   ],
   "images": [
     {
-      "url": "https://example.com/image.jpg",
+      "url": "https://images.pexels.com/photos/807598/pexels-photo-807598.jpeg",
+      "altText": "A black t-shirt",
+      "isPrimary": true
+    },
+    {
+      "url": "https://images.pexels.com/photos/325044/pexels-photo-325044.jpeg",
       "altText": "A black t-shirt",
       "isPrimary": true
     }
   ]
 }
 
-# -------------------------------------
-# CATEGORIES & BRANDS
-# -------------------------------------
+      # "url": "https://images.pexels.com/photos/842711/pexels-photo-842711.jpeg",
 
-### Get All Categories
-GET http://localhost:8080/api/category
+###
 
-### Create Category (Admin Only)
-POST http://localhost:8080/api/category
+POST http://localhost:8080/api/order/orders
 Content-Type: application/json
 
 {
-  "categoryName": "Apparel"
+  "Hi": "hi",
+  "hello": "hello"
 }
 
-### Get All Brands
-GET http://localhost:8080/api/brands
-
-### Create Brand (Admin Only)
-POST http://localhost:8080/api/brands
+###
+GET http://localhost:8080/api/order/orders
+###
+POST  http://localhost:8080/api/order/checkout
 Content-Type: application/json
 
 {
-  "brandName": "EcoWear"
+  "shippingAddressId": "324lkjkl",
+  "billingAddressId": "klfkl",
+  "paymentMethod": "CASH_ON_DELIVERY" 
 }
+
+
+# {
+#   "productId": "1323",
+#   "variantId": "456",
+#   "totalQuantity": 4,
+#   "totalPrice": 103000,
+#   "shippingAddress": "b772e661-eac6-42ca-9601-4f14a0261d01",
+#   "billingAddress": "b772e661-eac6-42ca-9601-4f14a0261d01"
+
+# }
+
+
+###
+GET http://localhost:8080/api/address
+
+###
+POST http://localhost:8080/api/address
+Content-Type: application/json
+
+{
+  "street": "No. 12, Main Road",
+  "state": "Mon State",
+  "city": "Moulmein",
+  "country": "Myanmar",
+  "postalCode": "213312",
+  "isDefault": true
+}
+
+###
+DELETE http://localhost:8080/api/address/4e0432c4-b74a-4a1b-b2e3-706c99ad5d43
+
+###
+GET http://localhost:8080/api/payment
+###
+POST http://localhost:8080/api/payment
+Content-Type: application/json
+
+{
+  "orderId": "3423",
+  "amount": 20000,
+  "paymentMethod": "CASH_ON_DELEVERY",
+  "transactionId": "3243faff"
+}
+###
+
+GET http://localhost:8080
+###
+GET http://localhost:8080/api/products
+###
+GET http://localhost:8080/api/cart
+###
+POST http://localhost:8080/api/cart
+Content-Type: application/json
+
+{
+  "productId": "45125a3e-a355-4474-b454-d2bd1bbfb57e", 
+  "variantId": "74eaedee-4ecf-4e2f-9ce2-687b6253db82",
+  "quantity": 1
+}
+
+#   "variantId": "cfa12e3d-6c2d-418f-991e-58687c4e7531",
+
+# {
+#   "productId": "5e81a089-343e-4258-a8ef-7ac1b03b1988", 
+#   "variantId": "2f2da615-d4fe-4797-a41c-bebae3ae6f75",
+#   "quantity": 1
+# }
+
+  # "variantId": "457a680c-75ee-4014-8f1d-689e7c930fdd",
+###
+DELETE http://localhost:8080/api/cart
+Content-Type: application/json
+
+
+{
+  "removeCartItemId": "10181237-6f97-4120-b4ec-51e9dc6997c4"
+}
+
+# {
+#   "removeCartItemId": "28c9a960-e8b8-436f-98d8-fe60c42422c8"
+# }
+
+###
+POST http://localhost:8080/api/cart/cart-total
+Content-Type: application/json
+
+{
+  "cartId": "434a7e7a-04f7-42ca-90b7-5a2ab02f7ed7"
+}
+
+# {
+#   "itemId": "6bb7dd1c-dfa1-449f-8b8f-379b2f077b1c"
+# }
+
+###
+# POST http://localhost:8080/api/cart/cart-total
+# Content-Type: application/json
+
+# {
+#   "cartId": "fb34f7c4-ff20-408b-a7ab-2c0a26b4fbc5"
+# }
 
 # -------------------------------------
 # CART
@@ -116,16 +235,18 @@ Content-Type: application/json
 ### Get Cart
 GET http://localhost:8080/api/cart
 
+
 ### Add Item to Cart
 POST http://localhost:8080/api/cart/items
 Content-Type: application/json
 
 {
   "productId": "420d44d8-152c-41a8-a72e-af4bd8256cda",
-  "variantId": "7bd2d276-7a0f-47a1-89d1-dc0588d33adb",
-  "quantity": 5
+  "variantId": "4cfd967c-1f60-4025-ae8a-63ab3e2d5dfc",
+  "quantity": 1
 }
 
+  # "variantId": "7bd2d276-7a0f-47a1-89d1-dc0588d33adb",
 # {
 #   "productId": "8d242bb1-25af-426f-a926-ddb3574599c5",
 #   "variantId": "508f8f8d-b1ad-40b6-a438-9e2c8c708495",
@@ -133,13 +254,22 @@ Content-Type: application/json
 # }
 
 ### Update Cart Item Quantity
-# Assuming the cart item ID is 'cart-item-id-123'
-PATCH http://localhost:8080/api/cart/items/cart-item-id-123
+PUT http://localhost:8080/api/cart/items
 Content-Type: application/json
 
 {
-  "quantity": 3
+  "cartItemId":"63b6f49a-3ea1-48c9-9084-b06c50b06e6d",
+  "quantity": 1
 }
+
+# Assuming the cart item ID is 'cart-item-id-123'
+# PUT http://localhost:8080/api/cart/items/cart-item-id-123
+# Content-Type: application/json
+
+# {
+#   "quantity": 3
+# }
+
 
 ### Remove Item from Cart
 # Assuming the cart item ID is 'cart-item-id-123'
@@ -147,6 +277,11 @@ DELETE http://localhost:8080/api/cart/items/cart-item-id-123
 
 ### Clear Entire Cart
 DELETE http://localhost:8080/api/cart
+Content-Type: application/json
+
+{
+  "removeCartItemId":"12e917b3-e876-48b4-ae6e-8ad078cfa432"
+}
 
 # -------------------------------------
 # ADMIN
@@ -163,6 +298,33 @@ Content-Type: application/json
 
 {
   "role": "ADMIN"
+}
+
+# -------------------------------------
+# CATEGORIES & BRANDS
+# -------------------------------------
+
+### Get All Categories
+GET http://localhost:8080/api/category
+
+### Create Category (Admin Only)
+POST http://localhost:8080/api/category
+Content-Type: application/json
+
+{
+  "name": "T-Shirt"
+}
+
+  # "categoryName": "Apparels"
+### Get All Brands
+GET http://localhost:8080/api/brands
+
+### Create Brand (Admin Only)
+POST http://localhost:8080/api/brands
+Content-Type: application/json
+
+{
+  "brandName": "EcoWear"
 }
 
 ### Delete a User (Admin Only)
@@ -187,7 +349,7 @@ DELETE http://localhost:8080/api/admin/users/user-id-to-delete
 
 # {
 #   "username": "taco",
-#   "email": "tacokoj681@linacit.com",
+#   "email": "rovover284@hosliy.com",
 #   "bio": "This is my Bio",
 #   "password": "htoomyat",
 #   "confirmPassword": "htoomyat"

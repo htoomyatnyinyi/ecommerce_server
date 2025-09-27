@@ -6,13 +6,23 @@ export const createCategory = async (
   req: Request,
   res: Response
 ): Promise<any> => {
-  const useId = req.user?.id;
-  const { categoryName } = req.body;
+  const userId = req.user?.id;
+  if (!userId) {
+    return res
+      .status(401)
+      .json({ message: "Unauthorized: User not authenticated" });
+  }
+  console.log(req.body, "at category");
+  // const { categoryName } = req.body;
+  const { name } = req.body;
 
   try {
     const categoryResponse = await prisma.category.create({
+      // data: {
+      //   categoryName
+      // },
       data: {
-        categoryName,
+        categoryName: name,
       },
     });
     res.status(201).json(categoryResponse);

@@ -40,7 +40,6 @@ const authenticated = async (
 
   try {
     const decoded = jwt.verify(accessToken, JWT_SECRET) as JwtPayload;
-
     // console.log("Token decoded successfully:", decoded);
 
     req.user = decoded; // ceck later
@@ -65,7 +64,7 @@ const handleRefreshToken = async (
   const cookies = req.cookies as AuthCookies;
   const refreshToken = cookies.refresh_id;
 
-  console.log(" when token expier this console will run");
+  console.log("WHEN handleRefreshToken - Cookies received:", req.cookies);
 
   if (!refreshToken) {
     res.status(401).json({
@@ -137,4 +136,5 @@ const permission = (roles: string[]) => {
 // router.get('/admin', authenticated, permission(['ADMIN']), (req, res) => {
 //   res.json({ message: 'Admin access granted' });
 // });
+
 export { authenticated, permission };
