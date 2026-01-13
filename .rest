@@ -68,32 +68,28 @@ POST http://localhost:8080/api/products
 Content-Type: application/json
 
 {
-  "title": "Pic ",
+  "title": "Plant B ",
   "description": "this is description",
   "brandName": "EcoWear",
-  "categoryId": "34b8adf3-693e-4d8f-aa2a-51063c4ee2a7",
+  "categoryId": "423d3843-7d7d-4efc-9528-11616e3baddd",
   "variants": [
     {
-      "sku": "ECO-TS-R-S",
+      "sku": "ECO-TS-R-C",
       "price": 10800,
-      "stock": 100,
+      "stock": 10,
       "color": "Black",
-      "size": "M"
+      "size": "C"
     },
     {
-      "sku": "ECO-TS-R-M",
+      "sku": "ECO-TS-R-Z",
       "price": 10000,
-      "stock": 80,
+      "stock": 8,
       "color": "White",
-      "size": "L"
+      "size": "Z"
     }
   ],
   "images": [
-    {
-      "url": "https://images.pexels.com/photos/807598/pexels-photo-807598.jpeg",
-      "altText": "A black t-shirt",
-      "isPrimary": true
-    },
+   
     {
       "url": "https://images.pexels.com/photos/325044/pexels-photo-325044.jpeg",
       "altText": "A black t-shirt",

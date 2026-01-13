@@ -365,6 +365,7 @@ export const signin = async (
     res.status(200).json({
       // accessToken,
       // refreshToken,
+      success: true,
       user: {
         id: user.id,
         username: user.username,
@@ -372,6 +373,8 @@ export const signin = async (
         role: user.role,
         createdAt: user.createdAt,
       },
+      access_token: accessToken,
+      refresh_token: refreshToken,
     });
   } catch (error: any) {
     console.log(error);
