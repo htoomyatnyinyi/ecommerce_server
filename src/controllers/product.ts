@@ -29,14 +29,17 @@ export const createProduct = async (
         .json({ message: "Unauthorized: User not authenticated" });
     }
 
-    console.log(req.body, "check req.body");
+    // console.log(req.body, "check req.body");
     const { title, description, brandName, categoryId, variants, images } =
       req.body;
 
     // Basic validation
-    if (!categoryId || !brandName) {
+    if (!categoryId) {
       return res.status(400).json({ error: "Missing required fields" });
     }
+    // if (!categoryId || !brandName) {
+    //   return res.status(400).json({ error: "Missing required fields" });
+    // }
     console.log(categoryId, brandName);
 
     const createdProduct = await prisma.product.create({

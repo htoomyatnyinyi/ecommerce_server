@@ -2,12 +2,14 @@
 //   optionsSuccessStatus: 204, // For legacy browser support
 // };
 
+import { FRONTEND_URL } from "./secrets";
+
 // export default corsOptions;
 
 // Dynamic origin based on allowed domains
 const allowedOrigins = [
   "http://localhost:5173",
-
+  FRONTEND_URL,
   "https://your-production-domain.com",
 ];
 
