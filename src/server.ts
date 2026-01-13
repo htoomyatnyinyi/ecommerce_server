@@ -2,6 +2,7 @@ import express, { Express, Request, Response, NextFunction } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
+// import corsOptions from "./utils/corsOptions.ts";
 import corsOptions from "./utils/corsOptions";
 import { PORT } from "./utils/secrets";
 
@@ -14,6 +15,7 @@ import brand from "./routes/brand";
 import order from "./routes/order";
 import address from "./routes/address";
 import payment from "./routes/payment";
+import checkout from "./routes/checkout";
 
 const app: Express = express();
 
@@ -28,6 +30,7 @@ app.use("/api/products", product);
 app.use("/api/cart", cart);
 app.use("/api/order", order);
 app.use("/api/payment", payment);
+app.use("/api/checkout", checkout);
 app.use("/api/address", address);
 app.use("/api/category", category);
 app.use("/api/brands", brand);

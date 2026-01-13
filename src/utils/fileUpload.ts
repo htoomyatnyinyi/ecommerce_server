@@ -1,18 +1,19 @@
-import multer from "multer";
+import multer, { FileFilterCallback } from "multer";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import dotenv from "dotenv";
+import { Request } from "express";
 
-// Setup __dirname in ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+dotenv.config();
+// __dirname is globally available in Node.js commonjs environment
 
 // Define the base uploads path and subfolders
 const uploadsPath = path.join(__dirname, "../../uploads");
 
 // console.log(__dirname, uploadsPath);
 
-const subDirectories = {
+const subDirectories: Record<string, string> = {
   image: "profile_img",
   coverImage: "cover_img",
   resume: "resume_docs",
@@ -40,7 +41,7 @@ const storage = multer.diskStorage({
     const folderKey = file.fieldname;
     const subDir = subDirectories[folderKey];
 
-    if (!subDir) return cb(new Error("Unknown upload type"), null);
+    if (!subDir) return cb(new Error("Unknown upload type"), "");
 
     const finalPath = path.join(uploadsPath, subDir);
     cb(null, finalPath);
@@ -64,8 +65,12 @@ const storage = multer.diskStorage({
 // });
 
 // File filter: Optional, customize per file type
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = {
+const fileFilter = (
+  req: Request,
+  file: Express.Multer.File,
+  cb: FileFilterCallback
+) => {
+  const allowedTypes: Record<string, string[]> = {
     resume: [
       "application/pdf",
       "application/msword",
@@ -87,7 +92,7 @@ const fileFilter = (req, file, cb) => {
 // Final uploader
 const fileUploads = multer({
   storage,
-  limits: { fileSize: parseInt(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024 },
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter,
 });
 

@@ -8,10 +8,10 @@ POST http://localhost:8080/api/auth/signup
 Content-Type: application/json
 
 {
-  "username": "taco",
-  "email": "taco@mail.com",
-  "password": "tacota",
-  "confirmPassword": "tacota"
+  "username": "user",
+  "email": "user@mail.com",
+  "password": "user..",
+  "confirmPassword": "user.."
 }
 
 ### User Signin
@@ -20,9 +20,14 @@ POST http://localhost:8080/api/auth/signin
 Content-Type: application/json
 
 {
-  "email": "taco@mail.com",
-  "password": "tacota"
+  "email": "user@mail.com",
+  "password": "user.."
 }
+
+# {
+#   "email": "taco@mail.com",
+#   "password": "tacota"
+# }
 
 ### Get Authenticated User
 # Retrieves the profile of the logged-in user.
@@ -540,3 +545,90 @@ DELETE http://localhost:8080/api/admin/users/user-id-to-delete
 
 # ###
 # GET http://localhost:8080/api/products
+
+# -------------------------------------
+# STRIPE CHECKOUT
+# -------------------------------------
+
+### Get Stripe Configuration
+# Get the publishable key for frontend
+GET http://localhost:8080/api/checkout/config
+
+### Create Payment Intent
+# Creates a Stripe PaymentIntent from cart items
+POST http://localhost:8080/api/checkout/create-payment-intent
+Content-Type: application/json
+
+{
+  "shippingAddressId": "address-uuid-here",
+  "billingAddressId": "address-uuid-here"
+}
+
+### Confirm Payment and Create Order
+# After successful payment on frontend, create the order
+POST http://localhost:8080/api/checkout/confirm-payment
+Content-Type: application/json
+
+{
+  "paymentIntentId": "pi_xxxxxxxxxx",
+  "shippingAddressId": "address-uuid-here",
+  "billingAddressId": "address-uuid-here"
+}
+
+### Cancel Payment Intent
+# Cancel a payment intent before it's completed
+POST http://localhost:8080/api/checkout/cancel-payment
+Content-Type: application/json
+
+{
+  "paymentIntentId": "pi_xxxxxxxxxx"
+}
+
+# -------------------------------------
+# ORDER MANAGEMENT
+# -------------------------------------
+
+### Get All Orders for Logged-in User
+GET http://localhost:8080/api/order
+
+### Get Order Statistics
+GET http://localhost:8080/api/order/stats
+
+### Get Specific Order by ID
+GET http://localhost:8080/api/order/order-uuid-here
+
+### Update Order Status
+# Users can cancel, admins can set any status
+PUT http://localhost:8080/api/order/order-uuid-here/status
+Content-Type: application/json
+
+{
+  "status": "CANCELLED"
+}
+
+# Order Status Options:
+# PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED, RETURNED
+
+# -------------------------------------
+# PAYMENT MANAGEMENT
+# -------------------------------------
+
+### Get All Payments for Logged-in User
+GET http://localhost:8080/api/payment
+
+### Get Payment by ID
+GET http://localhost:8080/api/payment/payment-uuid-here
+
+### Get Payment by Stripe PaymentIntent ID
+GET http://localhost:8080/api/payment/stripe/pi_xxxxxxxxxx
+
+### Update Payment Status (Admin Only)
+PUT http://localhost:8080/api/payment/payment-uuid-here
+Content-Type: application/json
+
+{
+  "paymentStatus": "REFUNDED"
+}
+
+# Payment Status Options:
+# PENDING, COMPLETED, FAILED, REFUNDED

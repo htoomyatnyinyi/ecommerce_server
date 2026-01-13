@@ -2,30 +2,11 @@ import { Request, Response } from "express";
 import prisma from "../config/database";
 
 /**
- * @description Get all addresses for the logged-in user
- * @route GET /api/addresses
+ * @description Get all payments for the logged-in user's orders
+ * @route GET /api/payment
  * @access Private
  */
-export const getPayment = async (req: Request, res: Response) => {
-  const userId = req.user?.id;
-
-  try {
-    const addresses = await prisma.payment.findMany({
-      // where: { userId },
-      orderBy: { createdAt: "desc" },
-    });
-    res.status(200).json(addresses);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to retrieve addresses." });
-  }
-};
-
-/**
- * @description Create a new address for the logged-in user
- * @route POST /api/addresses
- * @access Private
- */
-export const createPayment = async (
+export const getPayments = async (
   req: Request,
   res: Response
 ): Promise<any> => {
@@ -37,127 +18,165 @@ export const createPayment = async (
       .json({ error: "Unauthorized: User not authenticated." });
   }
 
-  const { orderId, amount, paymentMethod, paymentStatus, transactionId } =
-    req.body;
-
-  console.log(req.body);
-
-  if (!orderId || !amount || !paymentMethod || !transactionId) {
-    return res.status(400).json({ error: "Missing required fields." });
-  }
-
   try {
-    // // If setting a new default, we need a transaction
-    // if (isDefault) {
-    //   const [_, newAddress] = await prisma.$transaction([
-    //     // 1. Set all other addresses for this user to isDefault: false
-    //     prisma.address.updateMany({
-    //       where: { userId },
-    //       data: { isDefault: false },
-    //     }),
-    //     // 2. Create the new address as the default
-    //     prisma.address.create({
-    //       data: {
-    //         userId,
-    //         street,
-    //         city,
-    //         state,
-    //         country,
-    //         postalCode,
-    //         isDefault: true,
-    //       },
-    //     }),
-    //   ]);
-    //   return res.status(201).json(newAddress);
-    // }
-
-    // If not setting as default, just create it
-    const newAddress = await prisma.payment.create({
-      data: {
-        orderId,
-        amount,
-        paymentMethod,
-        paymentStatus,
-        transactionId,
-      },
-    });
-    return res.status(201).json(newAddress);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to create payment." });
-  }
-};
-
-/**
- * @description Update an existing address
- * @route PUT /api/addresses/:id
- * @access Private
- */
-export const updatePayment = async (
-  req: Request,
-  res: Response
-): Promise<any> => {
-  const userId = req.user?.id;
-  const { id: addressId } = req.params;
-  const { street, city, state, country, postalCode, isDefault } = req.body;
-
-  try {
-    if (isDefault) {
-      const [_, updatedAddress] = await prisma.$transaction([
-        // 1. Unset any other default addresses for the user
-        prisma.address.updateMany({
-          where: { userId, NOT: { id: addressId } },
-          data: { isDefault: false },
-        }),
-        // 2. Update the target address
-        prisma.address.update({
-          where: { id: addressId },
-          data: { street, city, state, country, postalCode, isDefault: true },
-        }),
-      ]);
-      return res.status(200).json(updatedAddress);
-    }
-
-    // Standard update if not changing the default status
-    const updatedAddress = await prisma.address.update({
-      where: { id: addressId, userId }, // Ensures user can only update their own address
-      data: { street, city, state, country, postalCode },
-    });
-
-    res.status(200).json(updatedAddress);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to update address." });
-  }
-};
-
-/**
- * @description Delete an address
- * @route DELETE /api/addresses/:id
- * @access Private
- */
-export const deletePayment = async (
-  req: Request,
-  res: Response
-): Promise<any> => {
-  const userId = req.user?.id;
-  const { id: addressId } = req.params;
-
-  try {
-    // Using deleteMany ensures the user can only delete their own address
-    const deleteResult = await prisma.address.deleteMany({
+    const payments = await prisma.payment.findMany({
       where: {
-        id: addressId,
-        userId: userId,
+        order: {
+          userId: userId,
+        },
+      },
+      include: {
+        order: {
+          select: {
+            id: true,
+            totalPrice: true,
+            status: true,
+            createdAt: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    res.status(200).json({ success: true, payments });
+  } catch (error) {
+    console.error("Error fetching payments:", error);
+    res.status(500).json({ error: "Failed to retrieve payments." });
+  }
+};
+
+/**
+ * @description Get a specific payment by ID
+ * @route GET /api/payment/:id
+ * @access Private
+ */
+export const getPaymentById = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  const userId = req.user?.id;
+  const { id: paymentId } = req.params;
+
+  if (!userId) {
+    return res
+      .status(401)
+      .json({ error: "Unauthorized: User not authenticated." });
+  }
+
+  try {
+    const payment = await prisma.payment.findFirst({
+      where: {
+        id: paymentId,
+        order: {
+          userId: userId,
+        },
+      },
+      include: {
+        order: {
+          include: {
+            items: {
+              include: {
+                product: true,
+                variant: true,
+              },
+            },
+            shippingAddress: true,
+            billingAddress: true,
+          },
+        },
       },
     });
 
-    if (deleteResult.count === 0) {
-      return res.status(404).json({
-        error: "Address not found or you do not have permission to delete it.",
-      });
+    if (!payment) {
+      return res.status(404).json({ error: "Payment not found." });
     }
 
-    res.status(200).json({ message: "Address deleted successfully." });
+    res.status(200).json({ success: true, payment });
   } catch (error) {
-    res.status(500).json({ error: "Failed to delete address." });
+    console.error("Error fetching payment:", error);
+    res.status(500).json({ error: "Failed to retrieve payment." });
+  }
+};
+
+/**
+ * @description Update payment status (admin only)
+ * @route PUT /api/payment/:id
+ * @access Private/Admin
+ */
+export const updatePaymentStatus = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  const { id: paymentId } = req.params;
+  const { paymentStatus } = req.body;
+
+  if (!paymentStatus) {
+    return res.status(400).json({ error: "Payment status is required." });
+  }
+
+  try {
+    const updatedPayment = await prisma.payment.update({
+      where: { id: paymentId },
+      data: { paymentStatus },
+      include: {
+        order: true,
+      },
+    });
+
+    res.status(200).json({ success: true, payment: updatedPayment });
+  } catch (error) {
+    console.error("Error updating payment:", error);
+    res.status(500).json({ error: "Failed to update payment status." });
+  }
+};
+
+/**
+ * @description Get payment by Stripe PaymentIntent ID
+ * @route GET /api/payment/stripe/:paymentIntentId
+ * @access Private
+ */
+export const getPaymentByStripeIntent = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  const userId = req.user?.id;
+  const { paymentIntentId } = req.params;
+
+  if (!userId) {
+    return res
+      .status(401)
+      .json({ error: "Unauthorized: User not authenticated." });
+  }
+
+  try {
+    const payment = await prisma.payment.findFirst({
+      where: {
+        stripePaymentIntentId: paymentIntentId,
+        order: {
+          userId: userId,
+        },
+      },
+      include: {
+        order: {
+          include: {
+            items: {
+              include: {
+                product: true,
+                variant: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!payment) {
+      return res.status(404).json({ error: "Payment not found." });
+    }
+
+    res.status(200).json({ success: true, payment });
+  } catch (error) {
+    console.error("Error fetching payment by Stripe intent:", error);
+    res.status(500).json({ error: "Failed to retrieve payment." });
   }
 };
