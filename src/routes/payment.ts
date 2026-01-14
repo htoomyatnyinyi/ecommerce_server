@@ -1,25 +1,27 @@
 import express from "express";
-
 import {
-  createPayment,
-  deletePayment,
-  getPayment,
-  updatePayment,
+  getPayments,
+  getPaymentById,
+  updatePaymentStatus,
+  getPaymentByStripeIntent,
 } from "../controllers/payment";
-import { authenticated } from "../middlewares/authMiddleware";
+import { authenticated, permission } from "../middlewares/authMiddleware";
 
 const router = express.Router();
 
-// All routes are protected and require a logged-in user
+// All routes require authentication
 router.use(authenticated);
 
-router.get("/", getPayment);
-router.post("/", createPayment);
+// Get all payments for logged-in user
+router.get("/", getPayments);
 
-router.put("/:id", updatePayment);
-router.delete("/:id", deletePayment);
+// Get payment by ID
+router.get("/:id", getPaymentById);
 
-// router.route("/").get(getAddresses).post(createAddress);
-// router.route("/:id").put(updateAddress).delete(deleteAddress);
+// Get payment by Stripe PaymentIntent ID
+router.get("/stripe/:paymentIntentId", getPaymentByStripeIntent);
+
+// Update payment status (admin only)
+router.put("/:id", permission(["ADMIN"]), updatePaymentStatus);
 
 export default router;

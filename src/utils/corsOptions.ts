@@ -1,12 +1,8 @@
-import { FRONTEND_URL } from "./secrets";
-
-// CORS Configuration
-// const corsOptions = {
-//   origin: FRONTEND_URL || "http://localhost:5173", // Replace with your frontend URL
-//   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
 //   credentials: true, // Allow cookies and authentication headers
 //   optionsSuccessStatus: 204, // For legacy browser support
 // };
+
+import { FRONTEND_URL } from "./secrets";
 
 // export default corsOptions;
 

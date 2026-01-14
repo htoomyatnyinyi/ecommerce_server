@@ -1,15 +1,27 @@
 import express from "express";
-import { authenticated } from "../middlewares/authMiddleware";
-import { createOrder, getOrder } from "../controllers/order";
+import { authenticated, permission } from "../middlewares/authMiddleware";
+import {
+  getOrders,
+  getOrderById,
+  updateOrderStatus,
+  getOrderStats,
+} from "../controllers/order";
 
 const router = express.Router();
 
-router.get("/orders", authenticated, getOrder);
-router.post("/orders", authenticated, createOrder);
+// All routes require authentication
+router.use(authenticated);
 
-// example
-// router.get("/order", authenticated, order);
-// router.get("/items", authenticated, order);
-// router.get("/checkout", authenticated, checkout);
+// Get all orders for logged-in user
+router.get("/", getOrders);
+
+// Get order statistics
+router.get("/stats", getOrderStats);
+
+// Get specific order by ID
+router.get("/:id", getOrderById);
+
+// Update order status
+router.put("/:id/status", updateOrderStatus);
 
 export default router;

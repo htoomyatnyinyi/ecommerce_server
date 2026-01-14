@@ -15,6 +15,10 @@ const EMAIL_PASS: string = process.env.EMAIL_PASS || "ggix chag wcui jgxp";
 const FRONTEND_URL: string =
   process.env.FRONTEND_URL || "http://localhost:5173";
 
+const STRIPE_SECRET_KEY: string = process.env.STRIPE_SECRET_KEY || "";
+const STRIPE_WEBHOOK_SECRET: string = process.env.STRIPE_WEBHOOK_SECRET || "";
+const STRIPE_PUBLISHABLE_KEY: string = process.env.STRIPE_PUBLISHABLE_KEY || "";
+
 export {
   PORT,
   JWT_SECRET,
@@ -26,4 +30,7 @@ export {
   EMAIL_USER,
   EMAIL_PASS,
   FRONTEND_URL,
+  STRIPE_SECRET_KEY,
+  STRIPE_WEBHOOK_SECRET,
+  STRIPE_PUBLISHABLE_KEY,
 };

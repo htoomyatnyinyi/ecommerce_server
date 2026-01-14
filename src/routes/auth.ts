@@ -23,7 +23,7 @@ router.post("/signup", validateAuthSignUpInput, signup);
 router.post("/signin", validateAuthSignInInput, signin);
 router.post("/signout", signout);
 
-router.get("/me", authenticated, authMe);
+router.get("/auth-me", authenticated, authMe);
 router.post("/verify-email", verifyEmail);
 router.post("/request-password-reset", requestPasswordReset);
 router.post("/reset-password", resetPassword);

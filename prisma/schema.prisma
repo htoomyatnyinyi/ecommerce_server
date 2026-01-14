@@ -24,6 +24,7 @@ model User {
   email         String         @unique
   password      String
   googleId      String?        @unique // Add for Google OAuth
+  stripeCustomerId String?     @unique // Stripe customer ID for payment management
   role          Role           @default(USER)
   isEmailVerified Boolean      @default(false)
   carts         Cart[]
@@ -211,15 +212,19 @@ model Order {
 }
 
 model Payment {
-  id             String        @id @default(uuid())
-  orderId        String        @unique // Foreign key for one-to-one relation
-  amount         Decimal       @db.Decimal(10, 2)
-  paymentMethod  PaymentMethod
-  paymentStatus  PaymentStatus @default(PENDING)
-  transactionId  String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  order          Order         @relation(fields: [orderId], references: [id])
+  id                    String        @id @default(uuid())
+  orderId               String        @unique // Foreign key for one-to-one relation
+  amount                Decimal       @db.Decimal(10, 2)
+  currency              String        @default("usd")
+  paymentMethod         PaymentMethod
+  paymentStatus         PaymentStatus @default(PENDING)
+  stripePaymentIntentId String?       @unique // Stripe PaymentIntent ID
+  stripeRefundId        String?       // Stripe Refund ID if refunded
+  transactionId         String?
+  metadata              Json?         // Additional payment metadata
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  order                 Order         @relation(fields: [orderId], references: [id])
 }
 
 model OrderItem {
@@ -275,6 +280,7 @@ enum Role {
 }
 
 enum PaymentMethod {
+  STRIPE
   CREDIT_CARD
   DEBIT_CARD
   PAYPAL

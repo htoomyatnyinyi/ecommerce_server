@@ -1,0 +1,20 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const auth_1 = require("../controllers/auth");
+const authMiddleware_1 = require("../middlewares/authMiddleware");
+const validateAuthInput_1 = require("../middlewares/validates/validateAuthInput");
+// import { isEmailVerified } from "../utils/isEmailVerified";
+const router = express_1.default.Router();
+router.post("/signup", validateAuthInput_1.validateAuthSignUpInput, auth_1.signup);
+router.post("/signin", validateAuthInput_1.validateAuthSignInInput, auth_1.signin);
+router.post("/signout", auth_1.signout);
+router.get("/me", authMiddleware_1.authenticated, auth_1.authMe);
+router.post("/verify-email", auth_1.verifyEmail);
+router.post("/request-password-reset", auth_1.requestPasswordReset);
+router.post("/reset-password", auth_1.resetPassword);
+router.get("/google", auth_1.googleAuth);
+exports.default = router;
