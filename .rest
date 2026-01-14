@@ -73,10 +73,10 @@ POST http://localhost:8080/api/products
 Content-Type: application/json
 
 {
-  "title": "Pic ",
+  "title": "SaKaWar Flower",
   "description": "this is description",
   "brandName": "EcoWear",
-  "categoryId": "34b8adf3-693e-4d8f-aa2a-51063c4ee2a7",
+  "categoryId": "423d3843-7d7d-4efc-9528-11616e3baddd",
   "variants": [
     {
       "sku": "ECO-TS-R-S",
@@ -110,6 +110,18 @@ Content-Type: application/json
       # "url": "https://images.pexels.com/photos/842711/pexels-photo-842711.jpeg",
 
 ###
+
+POST http://localhost:8080/api/order/orders
+Content-Type: application/json
+
+{
+  "Hi": "hi",
+  "hello": "hello"
+}
+
+###
+GET http://localhost:8080/api/order/orders
+###
 POST  http://localhost:8080/api/order/checkout
 Content-Type: application/json
 
@@ -139,12 +151,12 @@ POST http://localhost:8080/api/address
 Content-Type: application/json
 
 {
-  "street": "Main Road",
+  "street": "No. 12, Main Road",
   "state": "Mon State",
   "city": "Moulmein",
   "country": "Myanmar",
-  "postalCode": "324333",
-  "isDefault": true,
+  "postalCode": "213312",
+  "isDefault": true
 }
 
 ###
@@ -163,6 +175,9 @@ Content-Type: application/json
   "transactionId": "3243faff"
 }
 ###
+
+GET http://localhost:8080
+###
 GET http://localhost:8080/api/products
 ###
 GET http://localhost:8080/api/cart
@@ -171,8 +186,8 @@ POST http://localhost:8080/api/cart
 Content-Type: application/json
 
 {
-  "productId": "e8ffa06e-b98e-4a63-9fff-471b7f868cb5", 
-  "variantId": "5cb9de08-3316-4cae-bf9e-3b0b7947f188",
+  "productId": "45125a3e-a355-4474-b454-d2bd1bbfb57e", 
+  "variantId": "74eaedee-4ecf-4e2f-9ce2-687b6253db82",
   "quantity": 1
 }
 
@@ -224,6 +239,8 @@ Content-Type: application/json
 
 ### Get Cart
 GET http://localhost:8080/api/cart
+
+
 ### Add Item to Cart
 POST http://localhost:8080/api/cart/items
 Content-Type: application/json
@@ -247,7 +264,7 @@ Content-Type: application/json
 
 {
   "cartItemId":"63b6f49a-3ea1-48c9-9084-b06c50b06e6d",
-  "quantity": 3
+  "quantity": 1
 }
 
 # Assuming the cart item ID is 'cart-item-id-123'
@@ -545,90 +562,3 @@ DELETE http://localhost:8080/api/admin/users/user-id-to-delete
 
 # ###
 # GET http://localhost:8080/api/products
-
-# -------------------------------------
-# STRIPE CHECKOUT
-# -------------------------------------
-
-### Get Stripe Configuration
-# Get the publishable key for frontend
-GET http://localhost:8080/api/checkout/config
-
-### Create Payment Intent
-# Creates a Stripe PaymentIntent from cart items
-POST http://localhost:8080/api/checkout/create-payment-intent
-Content-Type: application/json
-
-{
-  "shippingAddressId": "address-uuid-here",
-  "billingAddressId": "address-uuid-here"
-}
-
-### Confirm Payment and Create Order
-# After successful payment on frontend, create the order
-POST http://localhost:8080/api/checkout/confirm-payment
-Content-Type: application/json
-
-{
-  "paymentIntentId": "pi_xxxxxxxxxx",
-  "shippingAddressId": "address-uuid-here",
-  "billingAddressId": "address-uuid-here"
-}
-
-### Cancel Payment Intent
-# Cancel a payment intent before it's completed
-POST http://localhost:8080/api/checkout/cancel-payment
-Content-Type: application/json
-
-{
-  "paymentIntentId": "pi_xxxxxxxxxx"
-}
-
-# -------------------------------------
-# ORDER MANAGEMENT
-# -------------------------------------
-
-### Get All Orders for Logged-in User
-GET http://localhost:8080/api/order
-
-### Get Order Statistics
-GET http://localhost:8080/api/order/stats
-
-### Get Specific Order by ID
-GET http://localhost:8080/api/order/order-uuid-here
-
-### Update Order Status
-# Users can cancel, admins can set any status
-PUT http://localhost:8080/api/order/order-uuid-here/status
-Content-Type: application/json
-
-{
-  "status": "CANCELLED"
-}
-
-# Order Status Options:
-# PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED, RETURNED
-
-# -------------------------------------
-# PAYMENT MANAGEMENT
-# -------------------------------------
-
-### Get All Payments for Logged-in User
-GET http://localhost:8080/api/payment
-
-### Get Payment by ID
-GET http://localhost:8080/api/payment/payment-uuid-here
-
-### Get Payment by Stripe PaymentIntent ID
-GET http://localhost:8080/api/payment/stripe/pi_xxxxxxxxxx
-
-### Update Payment Status (Admin Only)
-PUT http://localhost:8080/api/payment/payment-uuid-here
-Content-Type: application/json
-
-{
-  "paymentStatus": "REFUNDED"
-}
-
-# Payment Status Options:
-# PENDING, COMPLETED, FAILED, REFUNDED

@@ -189,6 +189,7 @@ export const getProducts = async (
         },
         variants: {
           select: {
+            id: true, // update
             sku: true,
             price: true,
             discountPrice: false,
