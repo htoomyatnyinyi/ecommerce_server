@@ -16,11 +16,13 @@ const FRONTEND_URL: string =
   process.env.FRONTEND_URL || "http://localhost:5173";
 
 const STRIPE_SECRET_KEY: string =
+  process.env.STRIPE_SECRET_KEY ||
   "sk_test_51SpOXN5a8dgiY5gLDYwZFj3185FaE7gW878nuB89oghjWKLgpRlFcETOZaAwsbi4tHKBvLXvFFZFwww4NpkBmjvd00mIIEyDDU";
 const STRIPE_WEBHOOK_SECRET: string =
   process.env.STRIPE_WEBHOOK_SECRET || "whsec_1234567890abcdef1234567890abcdef";
 const STRIPE_PUBLISHABLE_KEY: string =
-  "pk_test_51SpOXN5a8dgiY5gLfgQ4an5yy9cdKOqtgF4zwC9vnUw9Ad5GVYRCDuKcbqais5g3Y7q4pIlMJLiOA7zan0ZTylOW00eePk1npo";
+  process.env.STRIPE_PUBLISHABLE_KEY ||
+  "pk_test_51SSorfHbhN0Z6COOSbTbqgRAM1kXRQqzte0sxKw0NIKsUELB4YMTiyyXS4KOdoDC288MwYwghM2Pj5Ro61U04WCU00IFeNFn3a";
 
 export {
   PORT,
