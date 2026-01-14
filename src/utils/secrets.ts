@@ -26,7 +26,21 @@ if (!STRIPE_SECRET_KEY && !STRIPE_PUBLISHABLE_KEY) {
     "STRIPE_SECRET_KEY or STRIPE_PUBLISHABLE_KEY is not defined in environment variables"
   );
 }
-
+// console.log(
+//   PORT,
+//   JWT_SECRET,
+//   JWT_REFRESH_SECRET,
+//   COOKIE_MAX_AGE,
+//   NODE_ENV,
+//   EMAIL_HOST,
+//   EMAIL_PORT,
+//   EMAIL_USER,
+//   EMAIL_PASS,
+//   FRONTEND_URL,
+//   STRIPE_SECRET_KEY,
+//   // STRIPE_WEBHOOK_SECRET,
+//   STRIPE_PUBLISHABLE_KEY
+// );
 export {
   PORT,
   JWT_SECRET,
