@@ -55,7 +55,7 @@ export const getPaymentById = async (
   res: Response
 ): Promise<any> => {
   const userId = req.user?.id;
-  const { id: paymentId } = req.params;
+  const { id: paymentId }: any = req.params;
 
   if (!userId) {
     return res
@@ -107,7 +107,7 @@ export const updatePaymentStatus = async (
   req: Request,
   res: Response
 ): Promise<any> => {
-  const { id: paymentId } = req.params;
+  const { id: paymentId }: any = req.params;
   const { paymentStatus } = req.body;
 
   if (!paymentStatus) {
@@ -140,7 +140,7 @@ export const getPaymentByStripeIntent = async (
   res: Response
 ): Promise<any> => {
   const userId = req.user?.id;
-  const { paymentIntentId } = req.params;
+  const { paymentIntentId }: any = req.params;
 
   if (!userId) {
     return res

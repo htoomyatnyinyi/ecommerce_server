@@ -9,9 +9,9 @@ const createAccount = async (
   req: Request<{}, {}, createAccountType>,
   res: Response
 ): Promise<any> => {
-  const userId = req.user?.id; // const {id} = req.user
+  // const userId = req.user?.id; // const {id} = req.user
 
-  console.log(userId, "middleware");
+  // console.log(userId, "middleware");
 
   try {
     const { username, email, password, confirmPassword, role } = req.body;
@@ -128,7 +128,7 @@ const updateAccount = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id; // Admin or user ID from middleware
     const userRole = req.user?.role; // Role from middleware
-    const { id: accountId } = req.params; // Extract accountId from params
+    const { id: accountId }: any = req.params; // Extract accountId from params
     const { username, email, role } = req.body as UpdateAccountBody; // Extract fields to update
 
     // Validate input
@@ -188,7 +188,7 @@ const deleteAccount = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id; // Admin or user ID from middleware
     const userRole = req.user?.role; // Role from middleware
-    const { id: accountId } = req.params; // Extract accountId from params
+    const { id: accountId } : any = req.params; // Extract accountId from params
 
     // Validate input
     if (!accountId) {

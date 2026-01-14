@@ -12,7 +12,7 @@ const router = express_1.default.Router();
 router.post("/signup", validateAuthInput_1.validateAuthSignUpInput, auth_1.signup);
 router.post("/signin", validateAuthInput_1.validateAuthSignInInput, auth_1.signin);
 router.post("/signout", auth_1.signout);
-router.get("/me", authMiddleware_1.authenticated, auth_1.authMe);
+router.get("/auth-me", authMiddleware_1.authenticated, auth_1.authMe);
 router.post("/verify-email", auth_1.verifyEmail);
 router.post("/request-password-reset", auth_1.requestPasswordReset);
 router.post("/reset-password", auth_1.resetPassword);

@@ -97,7 +97,7 @@ export const updateAddress = async (
   res: Response
 ): Promise<any> => {
   const userId = req.user?.id;
-  const { id: addressId } = req.params;
+  const { id: addressId }: any = req.params;
   const { street, city, state, country, postalCode, isDefault } = req.body;
 
   try {
@@ -139,7 +139,7 @@ export const deleteAddress = async (
   res: Response
 ): Promise<any> => {
   const userId = req.user?.id;
-  const { id: addressId } = req.params;
+  const { id: addressId }: any = req.params;
 
   try {
     // Using deleteMany ensures the user can only delete their own address

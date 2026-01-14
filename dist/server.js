@@ -19,6 +19,7 @@ const order_1 = __importDefault(require("./routes/order"));
 const address_1 = __importDefault(require("./routes/address"));
 const payment_1 = __importDefault(require("./routes/payment"));
 const checkout_1 = __importDefault(require("./routes/checkout"));
+const user_1 = __importDefault(require("./routes/user"));
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)(corsOptions_1.default));
 app.use(express_1.default.json());
@@ -34,6 +35,7 @@ app.use("/api/checkout", checkout_1.default);
 app.use("/api/address", address_1.default);
 app.use("/api/category", category_1.default);
 app.use("/api/brands", brand_1.default);
+app.use("/api/user", user_1.default);
 // --- Route for testing server ---
 app.get("/", (req, res) => {
     console.log(req.body);

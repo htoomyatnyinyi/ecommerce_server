@@ -16,12 +16,15 @@ const createProduct = async (req, res) => {
                 .status(401)
                 .json({ message: "Unauthorized: User not authenticated" });
         }
-        console.log(req.body, "check req.body");
+        // console.log(req.body, "check req.body");
         const { title, description, brandName, categoryId, variants, images } = req.body;
         // Basic validation
-        if (!categoryId || !brandName) {
+        if (!categoryId) {
             return res.status(400).json({ error: "Missing required fields" });
         }
+        // if (!categoryId || !brandName) {
+        //   return res.status(400).json({ error: "Missing required fields" });
+        // }
         console.log(categoryId, brandName);
         const createdProduct = await database_1.default.product.create({
             data: {
@@ -148,6 +151,7 @@ const getProducts = async (req, res) => {
                 },
                 variants: {
                     select: {
+                        id: true, // update
                         sku: true,
                         price: true,
                         discountPrice: false,
@@ -166,9 +170,12 @@ const getProducts = async (req, res) => {
                 category: true,
                 productBrands: true,
             },
-            orderBy: {
-                [sortBy]: sortOrder,
-            },
+            // Build orderBy dynamically and cast to satisfy Prisma/TS types
+            orderBy: (() => {
+                const o = {};
+                o[sortBy] = sortOrder;
+                return o;
+            })(),
         });
         // console.log(responseProducts);
         res.status(200).json({
@@ -192,7 +199,9 @@ const getProducts = async (req, res) => {
 exports.getProducts = getProducts;
 const getProductById = async (req, res) => {
     try {
-        const productId = req.params.id;
+        const productId = Array.isArray(req.params.id)
+            ? req.params.id[0]
+            : req.params.id;
         if (!productId) {
             return res.status(400).json({ message: "Product ID is required" });
         }
@@ -204,6 +213,7 @@ const getProductById = async (req, res) => {
                 images: true,
                 variants: true,
                 category: true,
+                productBrands: true,
             },
         });
         if (!responseProduct) {
