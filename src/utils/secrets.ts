@@ -15,9 +15,18 @@ const EMAIL_PASS: string = process.env.EMAIL_PASS || "ggix chag wcui jgxp";
 const FRONTEND_URL: string =
   process.env.FRONTEND_URL || "http://localhost:5173";
 
-const STRIPE_SECRET_KEY: string = process.env.STRIPE_SECRET_KEY || "";
+const STRIPE_SECRET_KEY: string = process.env.STRIPE_SECRET_KEY!;
 const STRIPE_WEBHOOK_SECRET: string = process.env.STRIPE_WEBHOOK_SECRET || "";
-const STRIPE_PUBLISHABLE_KEY: string = process.env.STRIPE_PUBLISHABLE_KEY || "";
+const STRIPE_PUBLISHABLE_KEY: string = process.env.STRIPE_PUBLISHABLE_KEY!;
+
+// GOOD – use environment variable
+// export const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY!;
+
+if (!STRIPE_SECRET_KEY && !STRIPE_PUBLISHABLE_KEY) {
+  throw new Error(
+    "STRIPE_SECRET_KEY or STRIPE_PUBLISHABLE_KEY is not defined in environment variables"
+  );
+}
 
 export {
   PORT,
