@@ -39,7 +39,7 @@ router.delete("/account/:id", deleteAccount);
 
 router.post("/product", createProduct);
 router.get("/products", getProducts);
-router.get("/product/:id", updateProduct);
+router.put("/product/:id", updateProduct);
 router.get("/product/:id", getProductById);
 router.delete("/product/:id", deleteProduct);
 

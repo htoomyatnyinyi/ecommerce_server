@@ -257,23 +257,79 @@ const getProductById = async (req: Request, res: Response): Promise<any> => {
 };
 
 const updateProduct = async (req: Request, res: Response): Promise<any> => {
-  const userId = req.user?.id; // const {id} = req.user
-
-  console.log(userId, "middleware");
+  const { id }: any = req.params;
+  const { title, description, categoryId, variants, images } = req.body;
 
   try {
-    res.status(201).json({ mesg: "success" });
-  } catch (error) {}
+    const updatedProduct = await prisma.$transaction(async (tx) => {
+      // Update basic product info
+      const product = await tx.product.update({
+        where: { id },
+        data: {
+          title,
+          description,
+          categoryId,
+        },
+      });
+
+      // Handle variants
+      if (variants && variants.length > 0) {
+        // Simple approach: delete existing and create new
+        // Better approach: update existing, create new, delete missing
+        // For now, let's go with the simpler approach for this MVP
+        await tx.variant.deleteMany({ where: { productId: id } });
+        await tx.variant.createMany({
+          data: variants.map((v: any) => ({
+            productId: id,
+            sku: v.sku,
+            price: v.price,
+            stock: v.stock,
+            color: v.color,
+            size: v.size,
+          })),
+        });
+      }
+
+      // Handle images
+      if (images && images.length > 0) {
+        await tx.image.deleteMany({ where: { productId: id } });
+        await tx.image.createMany({
+          data: images.map((img: any) => ({
+            productId: id,
+            url: img.url,
+            altText: img.altText,
+            isPrimary: img.isPrimary,
+          })),
+        });
+      }
+
+      return product;
+    });
+
+    res.status(200).json({ success: true, data: updatedProduct });
+  } catch (error) {
+    console.error("Update product error:", error);
+    res.status(500).json({ message: "Failed to update product" });
+  }
 };
 
 const deleteProduct = async (req: Request, res: Response): Promise<any> => {
-  const userId = req.user?.id; // const {id} = req.user
-
-  console.log(userId, "middleware");
+  const { id }: any = req.params;
 
   try {
-    res.status(201).json({ mesg: "success" });
-  } catch (error) {}
+    await prisma.$transaction([
+      prisma.image.deleteMany({ where: { productId: id } }),
+      prisma.variant.deleteMany({ where: { productId: id } }),
+      prisma.product.delete({ where: { id } }),
+    ]);
+
+    res
+      .status(200)
+      .json({ success: true, message: "Product deleted successfully" });
+  } catch (error) {
+    console.error("Delete product error:", error);
+    res.status(500).json({ message: "Failed to delete product" });
+  }
 };
 
 const getCart = async (req: Request, res: Response): Promise<any> => {
