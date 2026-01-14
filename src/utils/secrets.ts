@@ -2,21 +2,20 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const PORT: number = parseInt(process.env.PORT || "8000");
-const JWT_SECRET: string = process.env.JWT_SECRET || "ekfkafj";
-const JWT_REFRESH_SECRET: string = process.env.JWT_REFRESH_SECRET || "abcdef";
-const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
-const NODE_ENV: string = process.env.NODENV || "development";
-const EMAIL_HOST: string = process.env.EMAIL_HOST || "smtp.gmail.com";
-const EMAIL_PORT: number = parseInt(process.env.EMAIL_PORT || "587");
-const EMAIL_USER: string = process.env.EMAIL_USER || "htoomyathmnn@gmail.com";
-const EMAIL_PASS: string = process.env.EMAIL_PASS || "ggix chag wcui jgxp";
+const PORT: number = parseInt(process.env.PORT!);
+const JWT_SECRET: string = process.env.JWT_SECRET!;
+const JWT_REFRESH_SECRET: string = process.env.JWT_REFRESH_SECRET!;
+const COOKIE_MAX_AGE = parseInt(process.env.COOKIE_MAX_AGE!);
+const NODE_ENV: string = process.env.NODENV!;
+const EMAIL_HOST: string = process.env.EMAIL_HOST!;
+const EMAIL_PORT: number = parseInt(process.env.EMAIL_PORT!);
+const EMAIL_USER: string = process.env.EMAIL_USER!;
+const EMAIL_PASS: string = process.env.EMAIL_PASS!;
 
-const FRONTEND_URL: string =
-  process.env.FRONTEND_URL || "http://localhost:5173";
+const FRONTEND_URL: string = process.env.FRONTEND_URL!;
 
 const STRIPE_SECRET_KEY: string = process.env.STRIPE_SECRET_KEY!;
-const STRIPE_WEBHOOK_SECRET: string = process.env.STRIPE_WEBHOOK_SECRET || "";
+const STRIPE_WEBHOOK_SECRET: string = process.env.STRIPE_WEBHOOK_SECRET!;
 const STRIPE_PUBLISHABLE_KEY: string = process.env.STRIPE_PUBLISHABLE_KEY!;
 
 // GOOD – use environment variable
