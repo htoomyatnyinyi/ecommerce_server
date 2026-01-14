@@ -303,3 +303,12 @@ enum OrderStatus {
   CANCELLED
   RETURNED
 }
+
+model SystemConfig {
+  id              String   @id @default("global")
+  siteName        String   @default("OASIS")
+  maintenanceMode Boolean  @default(false)
+  globalDiscount  Decimal  @default(0.00) @db.Decimal(5, 2)
+  contactEmail    String?
+  updatedAt       DateTime @updatedAt
+}

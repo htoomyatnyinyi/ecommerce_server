@@ -386,10 +386,105 @@ const deleteOrder = async (req: Request, res: Response): Promise<any> => {
   const userId = req.user?.id; // const {id} = req.user
 
   console.log(userId, "middleware");
-
   try {
     res.status(201).json({ mesg: "success" });
   } catch (error) {}
+};
+
+const getSystemConfig = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const config = await prisma.systemConfig.upsert({
+      where: { id: "global" },
+      update: {},
+      create: {
+        id: "global",
+        siteName: "OASIS",
+        maintenanceMode: false,
+        globalDiscount: 0,
+      },
+    });
+    res.status(200).json({ success: true, data: config });
+  } catch (error) {
+    console.error("Get system config error:", error);
+    res.status(500).json({ message: "Failed to fetch system config" });
+  }
+};
+
+const updateSystemConfig = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  const { siteName, maintenanceMode, globalDiscount, contactEmail } = req.body;
+  try {
+    const config = await prisma.systemConfig.update({
+      where: { id: "global" },
+      data: {
+        siteName,
+        maintenanceMode,
+        globalDiscount,
+        contactEmail,
+      },
+    });
+    res.status(200).json({ success: true, data: config });
+  } catch (error) {
+    console.error("Update system config error:", error);
+    res.status(500).json({ message: "Failed to update system config" });
+  }
+};
+
+const generateReport = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const [totalRevenue, totalUsers, totalOrders, latestOrders, categorySales] =
+      await Promise.all([
+        prisma.order.aggregate({
+          _sum: { totalPrice: true },
+        }),
+        prisma.user.count(),
+        prisma.order.count(),
+        prisma.order.findMany({
+          take: 10,
+          orderBy: { createdAt: "desc" },
+          include: { user: { select: { username: true, email: true } } },
+        }),
+        prisma.product.findMany({
+          select: {
+            title: true,
+            category: { select: { categoryName: true } },
+            orderItems: {
+              select: {
+                quantity: true,
+                price: true,
+              },
+            },
+          },
+        }),
+      ]);
+
+    // Simple report summary
+    const report = {
+      generatedAt: new Date(),
+      summary: {
+        totalRevenue: totalRevenue._sum.totalPrice || 0,
+        totalUsers,
+        totalOrders,
+        averageOrderValue:
+          totalOrders > 0
+            ? (Number(totalRevenue._sum.totalPrice || 0) / totalOrders).toFixed(
+                2
+              )
+            : 0,
+      },
+      inventoryHealth: await prisma.variant.count({
+        where: { stock: { lte: 10 } },
+      }),
+      recentActivity: latestOrders,
+    };
+
+    res.status(200).json({ success: true, report });
+  } catch (error) {
+    console.error("Generate report error:", error);
+    res.status(500).json({ message: "Failed to generate system report" });
+  }
 };
 
 const getAdminStats = async (req: Request, res: Response): Promise<void> => {
@@ -621,4 +716,7 @@ export {
   getAdminStats,
   getEmployerStats,
   getDetailedAnalytics,
+  getSystemConfig,
+  updateSystemConfig,
+  generateReport,
 };

@@ -19,6 +19,9 @@ import {
   getAdminStats,
   getEmployerStats,
   getDetailedAnalytics,
+  getSystemConfig,
+  updateSystemConfig,
+  generateReport,
 } from "../controllers/dashboard/admin";
 // import { verifyEmail } from "../controllers/auth";
 
@@ -29,6 +32,9 @@ router.use(authenticated);
 router.get("/stats", getAdminStats);
 router.get("/employer/stats", getEmployerStats);
 router.get("/analytics", getDetailedAnalytics);
+router.get("/config", getSystemConfig);
+router.put("/config", updateSystemConfig);
+router.get("/report", generateReport);
 
 router.post("/account", createAccount);
 router.get("/accounts", getAccounts);
