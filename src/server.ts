@@ -16,6 +16,7 @@ import order from "./routes/order";
 import address from "./routes/address";
 import payment from "./routes/payment";
 import checkout from "./routes/checkout";
+import user from "./routes/user";
 
 const app: Express = express();
 
@@ -34,6 +35,7 @@ app.use("/api/checkout", checkout);
 app.use("/api/address", address);
 app.use("/api/category", category);
 app.use("/api/brands", brand);
+app.use("/api/user", user);
 
 // --- Route for testing server ---
 app.get("/", (req: Request, res: Response) => {
