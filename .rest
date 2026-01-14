@@ -32,7 +32,7 @@ Content-Type: application/json
 ### Get Authenticated User
 # Retrieves the profile of the logged-in user.
 # @token = {{signin.response.body.token}}
-GET http://localhost:8080/api/auth/me
+GET http://localhost:8080/api/auth/auth-me
 
 ### Signout
 # Logs out the current user.

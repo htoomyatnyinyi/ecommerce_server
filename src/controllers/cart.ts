@@ -210,6 +210,7 @@ const getCart = async (req: Request, res: Response): Promise<any> => {
     res.status(200).json({ getCart, totalPrice, totalQuantity });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ error: "Failed to fetch cart" });
   }
 
   // before make a return data change.
@@ -275,6 +276,7 @@ const removeCart = async (req: Request, res: Response): Promise<any> => {
       .json({ success: true, msg: "remove cart already.", removedCartItem });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ error: "Failed to remove item from cart" });
   }
 };
 
@@ -289,7 +291,7 @@ const updateCart = async (req: Request, res: Response): Promise<any> => {
 
   // console.log(req.body, "updateCart body");
   const { cartItemId, quantity } = req.body;
-  if (!cartItemId || !quantity) {
+  if (!cartItemId || quantity === undefined) {
     return res
       .status(400)
       .json({ error: "Cart item ID and quantity are required." });
@@ -304,6 +306,7 @@ const updateCart = async (req: Request, res: Response): Promise<any> => {
     res.status(200).json({ success: true, updatedCartItem });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ error: "Failed to update cart item quantity" });
   }
 };
 
@@ -339,6 +342,7 @@ const cartTotal = async (req: Request, res: Response): Promise<any> => {
     res.status(201).json({ totalPrice, cartItems: cartItems[0]?.items });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ error: "Failed to calculate cart total" });
   }
 };
 
