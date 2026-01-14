@@ -9,8 +9,8 @@ const database_1 = __importDefault(require("../../config/database"));
 const secrets_1 = require("../../utils/secrets");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const createAccount = async (req, res) => {
-    const userId = req.user?.id; // const {id} = req.user
-    console.log(userId, "middleware");
+    // const userId = req.user?.id; // const {id} = req.user
+    // console.log(userId, "middleware");
     try {
         const { username, email, password, confirmPassword, role } = req.body;
         if (password !== confirmPassword) {

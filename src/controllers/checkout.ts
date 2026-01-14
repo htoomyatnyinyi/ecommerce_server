@@ -7,7 +7,7 @@ import {
   ConfirmPaymentRequest,
 } from "../types/stripe";
 import { Decimal } from "@prisma/client/runtime/library";
-
+import { STRIPE_PUBLISHABLE_KEY } from "../utils/secrets";
 /**
  * @description Create a Stripe PaymentIntent for checkout
  * @route POST /api/checkout/create-payment-intent
@@ -26,7 +26,23 @@ export const createPaymentIntent = async (
   }
 
   try {
-    const { shippingAddressId, billingAddressId } = req.body;
+    let { shippingAddressId, billingAddressId } = req.body;
+
+    // If no shipping address provided, try to find default
+    if (!shippingAddressId) {
+      const defaultAddress = await prisma.address.findFirst({
+        where: { userId, isDefault: true },
+        select: { id: true },
+      });
+      if (defaultAddress) {
+        shippingAddressId = defaultAddress.id;
+      }
+    }
+
+    // If no billing address, use shipping address
+    if (!billingAddressId && shippingAddressId) {
+      billingAddressId = shippingAddressId;
+    }
 
     // Get user's cart items
     const cartItems = await prisma.cartItem.findMany({
@@ -82,6 +98,18 @@ export const createPaymentIntent = async (
     }
 
     let customerId = user.stripeCustomerId;
+
+    if (customerId) {
+      // Verify customer exists in Stripe for this API key
+      try {
+        await stripe.customers.retrieve(customerId);
+      } catch (err) {
+        console.warn(
+          `Customer ${customerId} not found in this Stripe account, re-creating...`
+        );
+        customerId = null;
+      }
+    }
 
     if (!customerId) {
       const customer = await stripe.customers.create({
@@ -421,7 +449,7 @@ export const getStripeConfig = async (
   res: Response
 ): Promise<any> => {
   res.status(200).json({
-    publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
+    publishableKey: STRIPE_PUBLISHABLE_KEY,
   });
 };
 

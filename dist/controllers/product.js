@@ -199,9 +199,7 @@ const getProducts = async (req, res) => {
 exports.getProducts = getProducts;
 const getProductById = async (req, res) => {
     try {
-        const productId = Array.isArray(req.params.id)
-            ? req.params.id[0]
-            : req.params.id;
+        const productId = req.params.id;
         if (!productId) {
             return res.status(400).json({ message: "Product ID is required" });
         }
