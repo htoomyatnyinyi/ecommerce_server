@@ -11,5 +11,5 @@ export const auth_signup_schema = z.object({
   username: z.string().min(3).max(20),
   password: z.string().min(6).max(20),
   confirmPassword: z.string().min(6).max(20),
-  role: z.enum(["USER", "ADMIN"]).default("USER"),
+  role: z.enum(["USER", "EMPLOYER", "ADMIN"]).default("USER"),
 });

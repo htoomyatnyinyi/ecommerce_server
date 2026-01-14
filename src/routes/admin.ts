@@ -16,12 +16,19 @@ import {
   getOrder,
   updateOrder,
   deleteOrder,
+  getAdminStats,
+  getEmployerStats,
+  getDetailedAnalytics,
 } from "../controllers/dashboard/admin";
 // import { verifyEmail } from "../controllers/auth";
 
 const router = express.Router();
 
 router.use(authenticated);
+
+router.get("/stats", getAdminStats);
+router.get("/employer/stats", getEmployerStats);
+router.get("/analytics", getDetailedAnalytics);
 
 router.post("/account", createAccount);
 router.get("/accounts", getAccounts);

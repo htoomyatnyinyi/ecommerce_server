@@ -188,7 +188,7 @@ const deleteAccount = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id; // Admin or user ID from middleware
     const userRole = req.user?.role; // Role from middleware
-    const { id: accountId } : any = req.params; // Extract accountId from params
+    const { id: accountId }: any = req.params; // Extract accountId from params
 
     // Validate input
     if (!accountId) {
@@ -336,6 +336,185 @@ const deleteOrder = async (req: Request, res: Response): Promise<any> => {
   } catch (error) {}
 };
 
+const getAdminStats = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const [
+      totalUsers,
+      totalProducts,
+      totalOrders,
+      revenueData,
+      recentUsers,
+      recentOrders,
+    ] = await Promise.all([
+      prisma.user.count(),
+      prisma.product.count(),
+      prisma.order.count(),
+      prisma.order.aggregate({
+        where: { status: { not: "CANCELLED" } },
+        _sum: { totalPrice: true },
+      }),
+      prisma.user.findMany({
+        take: 5,
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          createdAt: true,
+          role: true,
+        },
+      }),
+      prisma.order.findMany({
+        take: 5,
+        orderBy: { createdAt: "desc" },
+        include: { user: { select: { username: true } } },
+      }),
+    ]);
+
+    const globalRevenue = Number(revenueData._sum.totalPrice || 0);
+
+    res.status(200).json({
+      success: true,
+      stats: {
+        totalUsers,
+        totalProducts,
+        totalOrders,
+        globalRevenue,
+      },
+      recentActivities: {
+        users: recentUsers,
+        orders: recentOrders,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching admin stats:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getEmployerStats = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+
+    const [products, recentProducts] = await Promise.all([
+      prisma.product.findMany({
+        where: { userId },
+        include: { variants: true },
+      }),
+      prisma.product.findMany({
+        where: { userId },
+        take: 5,
+        orderBy: { createdAt: "desc" },
+        include: {
+          images: { where: { isPrimary: true }, take: 1 },
+          variants: { take: 1 },
+        },
+      }),
+    ]);
+
+    // Find all orders that contain products belonging to this employer
+    // This requires checking OrderItem -> Product -> userId
+    const orderItems = await prisma.orderItem.findMany({
+      where: { product: { userId } },
+      include: { order: true },
+    });
+
+    const totalOrders = new Set(orderItems.map((item) => item.orderId)).size;
+    const totalRevenue = orderItems.reduce(
+      (sum, item) => sum + Number(item.price) * item.quantity,
+      0
+    );
+
+    res.status(200).json({
+      success: true,
+      stats: {
+        totalRevenue,
+        totalOrders,
+        activeListings: products.length,
+        salesVelocity: totalOrders > 0 ? (totalOrders / 30).toFixed(1) : "0", // Simplified dummy velocity
+      },
+      recentListings: recentProducts,
+    });
+  } catch (error) {
+    console.error("Error fetching employer stats:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getDetailedAnalytics = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const [revenueByCategory, userGrowth, inventoryHealth] = await Promise.all([
+      // Revenue by Category
+      prisma.orderItem.groupBy({
+        by: ["productId"],
+        _sum: { price: true, quantity: true },
+      }),
+      // User Growth (last 6 months)
+      prisma.user.findMany({
+        where: {
+          createdAt: {
+            gte: new Date(new Date().setMonth(new Date().getMonth() - 6)),
+          },
+        },
+        select: { createdAt: true },
+      }),
+      // Low stock alerts
+      prisma.variant.findMany({
+        where: { stock: { lte: 10 } },
+        include: { product: { select: { title: true } } },
+        take: 10,
+      }),
+    ]);
+
+    // Format revenue by category (needs mapping back to category via product)
+    // Note: Prisma groupBy doesn't support nested relations yet in some versions
+    // We'll do a slightly more manual fetch for categories if needed,
+    // but for now, let's just get the top products/categories data
+    const categories = await prisma.category.findMany({
+      include: {
+        products: {
+          include: {
+            orderItems: {
+              select: { price: true, quantity: true },
+            },
+          },
+        },
+      },
+    });
+
+    const categoryRevenue = categories.map((cat) => ({
+      name: cat.categoryName,
+      revenue: cat.products.reduce(
+        (acc, prod) =>
+          acc +
+          prod.orderItems.reduce(
+            (sum, item) => sum + Number(item.price) * item.quantity,
+            0
+          ),
+        0
+      ),
+    }));
+
+    res.status(200).json({
+      success: true,
+      categoryRevenue,
+      userGrowth: userGrowth.length, // Simplified for now
+      inventoryHealth,
+    });
+  } catch (error) {
+    console.error("Error fetching detailed analytics:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 export {
   createAccount,
   getAccounts,
@@ -352,4 +531,7 @@ export {
   getOrder,
   updateOrder,
   deleteOrder,
+  getAdminStats,
+  getEmployerStats,
+  getDetailedAnalytics,
 };

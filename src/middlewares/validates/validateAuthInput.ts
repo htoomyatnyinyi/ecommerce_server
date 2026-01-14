@@ -9,7 +9,7 @@ const validateAuthSignInInput = async (
 ): Promise<any> => {
   try {
     const validatedDaa = await auth_signin_schema.parseAsync(req.body);
-    console.log(validatedDaa, "check with zod before pass to controller");
+    // console.log(validatedDaa, "check with zod before pass to controller");
 
     req.body = validatedDaa;
     next();
@@ -24,7 +24,7 @@ const validateAuthSignUpInput = async (
 ): Promise<any> => {
   try {
     const validatedDaa = await auth_signup_schema.parseAsync(req.body);
-    console.log(validatedDaa, "check with zod before pass to controller");
+    // console.log(validatedDaa, "check with zod before pass to controller");
     req.body = validatedDaa;
     next();
   } catch (error: any) {
