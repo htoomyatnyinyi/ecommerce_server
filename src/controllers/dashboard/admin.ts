@@ -342,36 +342,34 @@ const getAdminStats = async (req: Request, res: Response): Promise<void> => {
       totalUsers,
       totalProducts,
       totalOrders,
-      revenueData,
+      globalRevenueResult,
       recentUsers,
       recentOrders,
+      lowStockCount,
+      uniqueCategoriesCount,
     ] = await Promise.all([
       prisma.user.count(),
       prisma.product.count(),
       prisma.order.count(),
       prisma.order.aggregate({
-        where: { status: { not: "CANCELLED" } },
+        where: { NOT: { status: "CANCELLED" } },
         _sum: { totalPrice: true },
       }),
       prisma.user.findMany({
         take: 5,
         orderBy: { createdAt: "desc" },
-        select: {
-          id: true,
-          username: true,
-          email: true,
-          createdAt: true,
-          role: true,
-        },
+        select: { id: true, username: true, createdAt: true },
       }),
       prisma.order.findMany({
         take: 5,
         orderBy: { createdAt: "desc" },
         include: { user: { select: { username: true } } },
       }),
+      prisma.variant.count({ where: { stock: { lte: 10 } } }),
+      prisma.category.count(),
     ]);
 
-    const globalRevenue = Number(revenueData._sum.totalPrice || 0);
+    const globalRevenue = globalRevenueResult?._sum?.totalPrice || 0;
 
     res.status(200).json({
       success: true,
@@ -380,6 +378,8 @@ const getAdminStats = async (req: Request, res: Response): Promise<void> => {
         totalProducts,
         totalOrders,
         globalRevenue,
+        lowStockCount,
+        uniqueCategoriesCount,
       },
       recentActivities: {
         users: recentUsers,
@@ -451,46 +451,45 @@ const getDetailedAnalytics = async (
   res: Response
 ): Promise<void> => {
   try {
-    const [revenueByCategory, userGrowth, inventoryHealth] = await Promise.all([
-      // Revenue by Category
-      prisma.orderItem.groupBy({
-        by: ["productId"],
-        _sum: { price: true, quantity: true },
-      }),
-      // User Growth (last 6 months)
-      prisma.user.findMany({
-        where: {
-          createdAt: {
-            gte: new Date(new Date().setMonth(new Date().getMonth() - 6)),
-          },
-        },
-        select: { createdAt: true },
-      }),
-      // Low stock alerts
-      prisma.variant.findMany({
-        where: { stock: { lte: 10 } },
-        include: { product: { select: { title: true } } },
-        take: 10,
-      }),
-    ]);
+    // User Growth (last 6 months)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-    // Format revenue by category (needs mapping back to category via product)
-    // Note: Prisma groupBy doesn't support nested relations yet in some versions
-    // We'll do a slightly more manual fetch for categories if needed,
-    // but for now, let's just get the top products/categories data
-    const categories = await prisma.category.findMany({
-      include: {
-        products: {
+    const [revenueByCategory, userGrowth, inventoryHealth, monthlyRevenueData] =
+      await Promise.all([
+        // Revenue by Category (more efficient query)
+        prisma.category.findMany({
           include: {
-            orderItems: {
-              select: { price: true, quantity: true },
+            products: {
+              include: {
+                orderItems: {
+                  select: { price: true, quantity: true },
+                },
+              },
             },
           },
-        },
-      },
-    });
+        }),
+        // User Growth
+        prisma.user.count({
+          where: { createdAt: { gte: sixMonthsAgo } },
+        }),
+        // Low stock alerts
+        prisma.variant.findMany({
+          where: { stock: { lte: 10 } },
+          include: { product: { select: { title: true } } },
+          take: 10,
+        }),
+        // Monthly Revenue for Chart
+        prisma.order.findMany({
+          where: {
+            createdAt: { gte: sixMonthsAgo },
+            NOT: { status: "CANCELLED" },
+          },
+          select: { totalPrice: true, createdAt: true },
+        }),
+      ]);
 
-    const categoryRevenue = categories.map((cat) => ({
+    const categoryRevenue = revenueByCategory.map((cat) => ({
       name: cat.categoryName,
       revenue: cat.products.reduce(
         (acc, prod) =>
@@ -503,11 +502,43 @@ const getDetailedAnalytics = async (
       ),
     }));
 
+    // Process monthly revenue
+    const months = [
+      "JAN",
+      "FEB",
+      "MAR",
+      "APR",
+      "MAY",
+      "JUN",
+      "JUL",
+      "AUG",
+      "SEP",
+      "OCT",
+      "NOV",
+      "DEC",
+    ];
+    const monthlyStats = Array.from({ length: 6 })
+      .map((_, i) => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - i);
+        const monthName = months[d.getMonth()];
+        const revenue = monthlyRevenueData
+          .filter(
+            (o) =>
+              new Date(o.createdAt).getMonth() === d.getMonth() &&
+              new Date(o.createdAt).getFullYear() === d.getFullYear()
+          )
+          .reduce((acc, o) => acc + Number(o.totalPrice), 0);
+        return { month: monthName, revenue };
+      })
+      .reverse();
+
     res.status(200).json({
       success: true,
       categoryRevenue,
-      userGrowth: userGrowth.length, // Simplified for now
+      userGrowth,
       inventoryHealth,
+      monthlyStats,
     });
   } catch (error) {
     console.error("Error fetching detailed analytics:", error);
