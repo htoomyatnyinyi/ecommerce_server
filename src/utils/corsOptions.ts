@@ -21,9 +21,17 @@ const corsOptions = {
     origin: string | undefined,
     callback: (err: Error | null, allow?: boolean) => void
   ) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    const isAllowed =
+      !origin ||
+      allowedOrigins.includes(origin) ||
+      origin.startsWith("exp://") ||
+      origin.includes("10.0.2.2") || // Android Emulator
+      origin.includes("192.168."); // Local Network
+
+    if (isAllowed) {
       callback(null, true);
     } else {
+      console.log("CORS Denied for origin:", origin);
       callback(new Error("Not allowed by CORS"));
     }
   },
