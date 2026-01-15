@@ -22,6 +22,8 @@ import {
   getSystemConfig,
   updateSystemConfig,
   generateReport,
+  getEmployerProducts,
+  getEmployerOrders,
 } from "../controllers/dashboard/admin";
 // import { verifyEmail } from "../controllers/auth";
 
@@ -31,6 +33,8 @@ router.use(authenticated);
 
 router.get("/stats", getAdminStats);
 router.get("/employer/stats", getEmployerStats);
+router.get("/employer/products", getEmployerProducts);
+router.get("/employer/orders", getEmployerOrders);
 router.get("/analytics", getDetailedAnalytics);
 router.get("/config", getSystemConfig);
 router.put("/config", updateSystemConfig);

@@ -697,6 +697,80 @@ const getDetailedAnalytics = async (
   }
 };
 
+const getEmployerProducts = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    const products = await prisma.product.findMany({
+      where: { userId },
+      include: {
+        category: { select: { categoryName: true } },
+        images: true,
+        variants: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    res.status(200).json({ success: true, products });
+  } catch (error) {
+    console.error("Get employer products error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getEmployerOrders = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    // Find all order items that belong to products owned by this employer
+    const orderItems = await prisma.orderItem.findMany({
+      where: { product: { userId } },
+      include: {
+        order: {
+          include: {
+            user: { select: { username: true, email: true } },
+            shippingAddress: true,
+          },
+        },
+        product: { select: { title: true } },
+        variant: { select: { color: true, size: true, sku: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    // Group items by order to show them as distinct orders in the UI
+    const ordersMap = new Map();
+    orderItems.forEach((item: any) => {
+      if (!ordersMap.has(item.orderId)) {
+        ordersMap.set(item.orderId, {
+          ...item.order,
+          items: [],
+        });
+      }
+      ordersMap.get(item.orderId).items.push({
+        id: item.id,
+        productId: item.productId,
+        productTitle: item.product.title,
+        variantInfo: `${item.variant.color} / ${item.variant.size}`,
+        sku: item.variant.sku,
+        quantity: item.quantity,
+        price: item.price,
+      });
+    });
+
+    const orders = Array.from(ordersMap.values());
+    res.status(200).json({ success: true, orders });
+  } catch (error) {
+    console.error("Get employer orders error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 export {
   createAccount,
   getAccounts,
@@ -719,4 +793,6 @@ export {
   getSystemConfig,
   updateSystemConfig,
   generateReport,
+  getEmployerProducts,
+  getEmployerOrders,
 };
