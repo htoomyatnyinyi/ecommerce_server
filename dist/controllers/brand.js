@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getBrandById = exports.getBrands = exports.createBrand = void 0;
 const database_1 = __importDefault(require("../config/database"));
 const createBrand = async (req, res) => {
-    const useId = req.user?.id;
+    // const useId = req.user?.id;
     const { brandName } = req.body;
     try {
         const categoryResponse = await database_1.default.brand.create({

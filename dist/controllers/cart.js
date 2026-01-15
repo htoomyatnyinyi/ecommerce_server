@@ -94,7 +94,25 @@ const addToCart = async (req, res) => {
             //     },
             //   },
             // });
-            res.json(cartItem);
+            const addToOrderItem = await database_1.default.orderItem.create({
+                data: {
+                    // productId,
+                    // variantId,
+                    product: { connect: { id: productId } },
+                    variant: { connect: { id: variantId } },
+                    quantity,
+                    price: 1000 * quantity, // Replace 1000 with actual price if available
+                    order: {
+                        create: {
+                            userId,
+                            totalPrice: 1000 * quantity, // Replace 1000 with actual price if available
+                            // shippingAddressId: "some-shipping-address-id", // Add shipping address ID if available
+                        },
+                    },
+                },
+            });
+            console.log(addToOrderItem, "addToOrderItem");
+            res.status(200).json(cartItem);
         }
     }
     catch (error) {
@@ -165,6 +183,7 @@ const getCart = async (req, res) => {
     }
     catch (error) {
         console.error(error);
+        res.status(500).json({ error: "Failed to fetch cart" });
     }
     // before make a return data change.
     // try {
@@ -224,6 +243,7 @@ const removeCart = async (req, res) => {
     }
     catch (error) {
         console.error(error);
+        res.status(500).json({ error: "Failed to remove item from cart" });
     }
 };
 exports.removeCart = removeCart;
@@ -237,7 +257,7 @@ const updateCart = async (req, res) => {
     }
     // console.log(req.body, "updateCart body");
     const { cartItemId, quantity } = req.body;
-    if (!cartItemId || !quantity) {
+    if (!cartItemId || quantity === undefined) {
         return res
             .status(400)
             .json({ error: "Cart item ID and quantity are required." });
@@ -251,6 +271,7 @@ const updateCart = async (req, res) => {
     }
     catch (error) {
         console.error(error);
+        res.status(500).json({ error: "Failed to update cart item quantity" });
     }
 };
 exports.updateCart = updateCart;
@@ -281,6 +302,7 @@ const cartTotal = async (req, res) => {
     }
     catch (error) {
         console.error(error);
+        res.status(500).json({ error: "Failed to calculate cart total" });
     }
 };
 exports.cartTotal = cartTotal;

@@ -20,7 +20,21 @@ const createPaymentIntent = async (req, res) => {
             .json({ error: "Unauthorized: User not authenticated." });
     }
     try {
-        const { shippingAddressId, billingAddressId } = req.body;
+        let { shippingAddressId, billingAddressId } = req.body;
+        // If no shipping address provided, try to find default
+        if (!shippingAddressId) {
+            const defaultAddress = await database_1.default.address.findFirst({
+                where: { userId, isDefault: true },
+                select: { id: true },
+            });
+            if (defaultAddress) {
+                shippingAddressId = defaultAddress.id;
+            }
+        }
+        // If no billing address, use shipping address
+        if (!billingAddressId && shippingAddressId) {
+            billingAddressId = shippingAddressId;
+        }
         // Get user's cart items
         const cartItems = await database_1.default.cartItem.findMany({
             where: { cart: { userId } },

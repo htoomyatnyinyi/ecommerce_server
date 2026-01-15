@@ -312,15 +312,35 @@ const signin = async (req, res) => {
 };
 exports.signin = signin;
 const authMe = async (req, res) => {
-    const user = req.user;
-    console.log(user);
     try {
+        const userId = req.user?.id;
+        if (!userId) {
+            res.status(401).json({ message: "Unauthorized" });
+            return;
+        }
+        const user = await database_1.default.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                username: true,
+                email: true,
+                role: true,
+                createdAt: true,
+                isEmailVerified: true,
+            },
+        });
+        if (!user) {
+            res.status(404).json({ message: "User not found" });
+            return;
+        }
         res.json(user);
     }
     catch (error) {
-        res
-            .status(500)
-            .json({ success: false, message: "Server error", error: error.message });
+        res.status(500).json({
+            success: false,
+            message: "Server error",
+            error: error.message,
+        });
     }
 };
 exports.authMe = authMe;

@@ -208,9 +208,12 @@ export const getProducts = async (
         category: true,
         productBrands: true,
       },
-      orderBy: {
-        [sortBy]: sortOrder,
-      },
+      // Build orderBy dynamically and cast to satisfy Prisma/TS types
+      orderBy: ((): any => {
+        const o: Record<string, "asc" | "desc"> = {};
+        o[sortBy] = sortOrder as "asc" | "desc";
+        return o;
+      })(),
     });
     // console.log(responseProducts);
 
@@ -237,7 +240,7 @@ export const getProductById = async (
   res: Response
 ): Promise<any> => {
   try {
-    const productId = req.params.id;
+    const productId: any = req.params.id;
 
     if (!productId) {
       return res.status(400).json({ message: "Product ID is required" });
@@ -251,6 +254,7 @@ export const getProductById = async (
         images: true,
         variants: true,
         category: true,
+        productBrands: true,
       },
     });
     if (!responseProduct) {

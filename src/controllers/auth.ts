@@ -379,19 +379,39 @@ export const signin = async (
   }
 };
 
-export const authMe = async (
-  req: Request<{}, AuthMe>,
-  res: Response<{}, AuthMeResponse>
-): Promise<void> => {
-  const user = req.user;
-  console.log(user);
-
+export const authMe = async (req: Request, res: Response): Promise<void> => {
   try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        isEmailVerified: true,
+      },
+    });
+
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
     res.json(user);
   } catch (error: any) {
-    res
-      .status(500)
-      .json({ success: false, message: "Server error", error: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
 

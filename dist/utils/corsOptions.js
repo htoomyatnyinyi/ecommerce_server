@@ -3,10 +3,12 @@
 //   optionsSuccessStatus: 204, // For legacy browser support
 // };
 Object.defineProperty(exports, "__esModule", { value: true });
+const secrets_1 = require("./secrets");
 // export default corsOptions;
 // Dynamic origin based on allowed domains
 const allowedOrigins = [
     "http://localhost:5173",
+    secrets_1.FRONTEND_URL,
     "https://your-production-domain.com",
 ];
 const corsOptions = {

@@ -68,7 +68,7 @@ export const getOrderById = async (
   res: Response
 ): Promise<any> => {
   const userId = req.user?.id;
-  const { id: orderId } = req.params;
+  const { id: orderId }: any = req.params;
 
   if (!userId) {
     return res
@@ -124,7 +124,7 @@ export const updateOrderStatus = async (
   res: Response
 ): Promise<any> => {
   const userId = req.user?.id;
-  const { id: orderId } = req.params;
+  const { id: orderId }: any = req.params;
   const { status } = req.body;
 
   if (!userId) {

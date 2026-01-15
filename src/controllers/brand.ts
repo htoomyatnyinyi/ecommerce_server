@@ -6,7 +6,7 @@ export const createBrand = async (
   req: Request,
   res: Response
 ): Promise<any> => {
-  const useId = req.user?.id;
+  // const useId = req.user?.id;
   const { brandName } = req.body;
 
   try {
@@ -44,7 +44,7 @@ export const getBrandById = async (
   req: Request,
   res: Response
 ): Promise<any> => {
-  const brandId: string = req.params.id;
+  const brandId: any = req.params.id;
 
   try {
     const categoryResponse = await prisma.category.findUnique({

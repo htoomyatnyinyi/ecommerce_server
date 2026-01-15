@@ -16,12 +16,33 @@ import {
   getOrder,
   updateOrder,
   deleteOrder,
+  getAdminStats,
+  getEmployerStats,
+  getDetailedAnalytics,
+  getSystemConfig,
+  updateSystemConfig,
+  generateReport,
+  getEmployerProducts,
+  getEmployerOrders,
+  getOrders,
+  updateOrderItemStatus,
 } from "../controllers/dashboard/admin";
 // import { verifyEmail } from "../controllers/auth";
 
 const router = express.Router();
 
 router.use(authenticated);
+
+router.get("/stats", getAdminStats);
+router.get("/employer/stats", getEmployerStats);
+router.get("/employer/products", getEmployerProducts);
+router.get("/employer/orders", getEmployerOrders);
+router.put("/employer/order-item/status", updateOrderItemStatus);
+router.get("/analytics", getDetailedAnalytics);
+router.get("/config", getSystemConfig);
+router.put("/config", updateSystemConfig);
+router.get("/orders", getOrders);
+router.get("/report", generateReport);
 
 router.post("/account", createAccount);
 router.get("/accounts", getAccounts);
@@ -32,7 +53,7 @@ router.delete("/account/:id", deleteAccount);
 
 router.post("/product", createProduct);
 router.get("/products", getProducts);
-router.get("/product/:id", updateProduct);
+router.put("/product/:id", updateProduct);
 router.get("/product/:id", getProductById);
 router.delete("/product/:id", deleteProduct);
 

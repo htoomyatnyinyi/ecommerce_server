@@ -9,9 +9,9 @@ const createAccount = async (
   req: Request<{}, {}, createAccountType>,
   res: Response
 ): Promise<any> => {
-  const userId = req.user?.id; // const {id} = req.user
+  // const userId = req.user?.id; // const {id} = req.user
 
-  console.log(userId, "middleware");
+  // console.log(userId, "middleware");
 
   try {
     const { username, email, password, confirmPassword, role } = req.body;
@@ -128,7 +128,7 @@ const updateAccount = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id; // Admin or user ID from middleware
     const userRole = req.user?.role; // Role from middleware
-    const { id: accountId } = req.params; // Extract accountId from params
+    const { id: accountId }: any = req.params; // Extract accountId from params
     const { username, email, role } = req.body as UpdateAccountBody; // Extract fields to update
 
     // Validate input
@@ -188,7 +188,7 @@ const deleteAccount = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id; // Admin or user ID from middleware
     const userRole = req.user?.role; // Role from middleware
-    const { id: accountId } = req.params; // Extract accountId from params
+    const { id: accountId }: any = req.params; // Extract accountId from params
 
     // Validate input
     if (!accountId) {
@@ -257,23 +257,79 @@ const getProductById = async (req: Request, res: Response): Promise<any> => {
 };
 
 const updateProduct = async (req: Request, res: Response): Promise<any> => {
-  const userId = req.user?.id; // const {id} = req.user
-
-  console.log(userId, "middleware");
+  const { id }: any = req.params;
+  const { title, description, categoryId, variants, images } = req.body;
 
   try {
-    res.status(201).json({ mesg: "success" });
-  } catch (error) {}
+    const updatedProduct = await prisma.$transaction(async (tx) => {
+      // Update basic product info
+      const product = await tx.product.update({
+        where: { id },
+        data: {
+          title,
+          description,
+          categoryId,
+        },
+      });
+
+      // Handle variants
+      if (variants && variants.length > 0) {
+        // Simple approach: delete existing and create new
+        // Better approach: update existing, create new, delete missing
+        // For now, let's go with the simpler approach for this MVP
+        await tx.variant.deleteMany({ where: { productId: id } });
+        await tx.variant.createMany({
+          data: variants.map((v: any) => ({
+            productId: id,
+            sku: v.sku,
+            price: v.price,
+            stock: v.stock,
+            color: v.color,
+            size: v.size,
+          })),
+        });
+      }
+
+      // Handle images
+      if (images && images.length > 0) {
+        await tx.image.deleteMany({ where: { productId: id } });
+        await tx.image.createMany({
+          data: images.map((img: any) => ({
+            productId: id,
+            url: img.url,
+            altText: img.altText,
+            isPrimary: img.isPrimary,
+          })),
+        });
+      }
+
+      return product;
+    });
+
+    res.status(200).json({ success: true, data: updatedProduct });
+  } catch (error) {
+    console.error("Update product error:", error);
+    res.status(500).json({ message: "Failed to update product" });
+  }
 };
 
 const deleteProduct = async (req: Request, res: Response): Promise<any> => {
-  const userId = req.user?.id; // const {id} = req.user
-
-  console.log(userId, "middleware");
+  const { id }: any = req.params;
 
   try {
-    res.status(201).json({ mesg: "success" });
-  } catch (error) {}
+    await prisma.$transaction([
+      prisma.image.deleteMany({ where: { productId: id } }),
+      prisma.variant.deleteMany({ where: { productId: id } }),
+      prisma.product.delete({ where: { id } }),
+    ]);
+
+    res
+      .status(200)
+      .json({ success: true, message: "Product deleted successfully" });
+  } catch (error) {
+    console.error("Delete product error:", error);
+    res.status(500).json({ message: "Failed to delete product" });
+  }
 };
 
 const getCart = async (req: Request, res: Response): Promise<any> => {
@@ -307,33 +363,497 @@ const deleteCart = async (req: Request, res: Response): Promise<any> => {
 };
 
 const getOrder = async (req: Request, res: Response): Promise<any> => {
-  const userId = req.user?.id; // const {id} = req.user
-
-  console.log(userId, "middleware");
-
   try {
-    res.status(201).json({ mesg: "success" });
-  } catch (error) {}
+    const { id }: any = req.params;
+    const order = await prisma.order.findUnique({
+      where: { id },
+      include: {
+        user: { select: { username: true, email: true } },
+        shippingAddress: true,
+        items: {
+          include: {
+            product: { select: { title: true } },
+            variant: { select: { color: true, size: true, sku: true } },
+          },
+        },
+      },
+    });
+
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    res.status(200).json({ success: true, order });
+  } catch (error) {
+    console.error("Get order error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getOrders = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const orders = await prisma.order.findMany({
+      include: {
+        user: { select: { username: true, email: true } },
+        shippingAddress: true,
+        items: {
+          include: {
+            product: { select: { title: true } },
+            variant: { select: { color: true, size: true, sku: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    res.status(200).json({ success: true, orders });
+  } catch (error) {
+    console.error("Get orders error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 const updateOrder = async (req: Request, res: Response): Promise<any> => {
-  const userId = req.user?.id; // const {id} = req.user
-
-  console.log(userId, "middleware");
-
   try {
-    res.status(201).json({ mesg: "success" });
-  } catch (error) {}
+    const { id }: any = req.params;
+    const { status } = req.body;
+
+    const order = await prisma.order.update({
+      where: { id },
+      data: { status },
+    });
+
+    res.status(200).json({ success: true, order });
+  } catch (error) {
+    console.error("Update order error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 const deleteOrder = async (req: Request, res: Response): Promise<any> => {
   const userId = req.user?.id; // const {id} = req.user
 
   console.log(userId, "middleware");
-
   try {
     res.status(201).json({ mesg: "success" });
   } catch (error) {}
+};
+
+const getSystemConfig = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const config = await prisma.systemConfig.upsert({
+      where: { id: "global" },
+      update: {},
+      create: {
+        id: "global",
+        siteName: "OASIS",
+        maintenanceMode: false,
+        globalDiscount: 0,
+      },
+    });
+    res.status(200).json({ success: true, data: config });
+  } catch (error) {
+    console.error("Get system config error:", error);
+    res.status(500).json({ message: "Failed to fetch system config" });
+  }
+};
+
+const updateSystemConfig = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  const { siteName, maintenanceMode, globalDiscount, contactEmail } = req.body;
+  try {
+    const config = await prisma.systemConfig.update({
+      where: { id: "global" },
+      data: {
+        siteName,
+        maintenanceMode,
+        globalDiscount,
+        contactEmail,
+      },
+    });
+    res.status(200).json({ success: true, data: config });
+  } catch (error) {
+    console.error("Update system config error:", error);
+    res.status(500).json({ message: "Failed to update system config" });
+  }
+};
+
+const generateReport = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const [totalRevenue, totalUsers, totalOrders, latestOrders, categorySales] =
+      await Promise.all([
+        prisma.order.aggregate({
+          _sum: { totalPrice: true },
+        }),
+        prisma.user.count(),
+        prisma.order.count(),
+        prisma.order.findMany({
+          take: 10,
+          orderBy: { createdAt: "desc" },
+          include: { user: { select: { username: true, email: true } } },
+        }),
+        prisma.product.findMany({
+          select: {
+            title: true,
+            category: { select: { categoryName: true } },
+            orderItems: {
+              select: {
+                quantity: true,
+                price: true,
+              },
+            },
+          },
+        }),
+      ]);
+
+    // Simple report summary
+    const report = {
+      generatedAt: new Date(),
+      summary: {
+        totalRevenue: totalRevenue._sum.totalPrice || 0,
+        totalUsers,
+        totalOrders,
+        averageOrderValue:
+          totalOrders > 0
+            ? (Number(totalRevenue._sum.totalPrice || 0) / totalOrders).toFixed(
+                2
+              )
+            : 0,
+      },
+      inventoryHealth: await prisma.variant.count({
+        where: { stock: { lte: 10 } },
+      }),
+      recentActivity: latestOrders,
+    };
+
+    res.status(200).json({ success: true, report });
+  } catch (error) {
+    console.error("Generate report error:", error);
+    res.status(500).json({ message: "Failed to generate system report" });
+  }
+};
+
+const getAdminStats = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const [
+      totalUsers,
+      totalProducts,
+      totalOrders,
+      globalRevenueResult,
+      recentUsers,
+      recentOrders,
+      lowStockCount,
+      uniqueCategoriesCount,
+    ] = await Promise.all([
+      prisma.user.count(),
+      prisma.product.count(),
+      prisma.order.count(),
+      prisma.order.aggregate({
+        where: { NOT: { status: "CANCELLED" } },
+        _sum: { totalPrice: true },
+      }),
+      prisma.user.findMany({
+        take: 5,
+        orderBy: { createdAt: "desc" },
+        select: { id: true, username: true, createdAt: true },
+      }),
+      prisma.order.findMany({
+        take: 5,
+        orderBy: { createdAt: "desc" },
+        include: { user: { select: { username: true } } },
+      }),
+      prisma.variant.count({ where: { stock: { lte: 10 } } }),
+      prisma.category.count(),
+    ]);
+
+    const globalRevenue = globalRevenueResult?._sum?.totalPrice || 0;
+
+    res.status(200).json({
+      success: true,
+      stats: {
+        totalUsers,
+        totalProducts,
+        totalOrders,
+        globalRevenue,
+        lowStockCount,
+        uniqueCategoriesCount,
+      },
+      recentActivities: {
+        users: recentUsers,
+        orders: recentOrders,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching admin stats:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getEmployerStats = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+
+    const [products, recentProducts] = await Promise.all([
+      prisma.product.findMany({
+        where: { userId },
+        include: { variants: true },
+      }),
+      prisma.product.findMany({
+        where: { userId },
+        take: 5,
+        orderBy: { createdAt: "desc" },
+        include: {
+          images: { where: { isPrimary: true }, take: 1 },
+          variants: { take: 1 },
+        },
+      }),
+    ]);
+
+    // Find all orders that contain products belonging to this employer
+    // This requires checking OrderItem -> Product -> userId
+    const orderItems = await prisma.orderItem.findMany({
+      where: { product: { userId } },
+      include: { order: true },
+    });
+
+    const totalOrders = new Set(orderItems.map((item) => item.orderId)).size;
+    const totalRevenue = orderItems.reduce(
+      (sum, item) => sum + Number(item.price) * item.quantity,
+      0
+    );
+
+    res.status(200).json({
+      success: true,
+      stats: {
+        totalRevenue,
+        totalOrders,
+        activeListings: products.length,
+        salesVelocity: totalOrders > 0 ? (totalOrders / 30).toFixed(1) : "0", // Simplified dummy velocity
+      },
+      recentListings: recentProducts,
+    });
+  } catch (error) {
+    console.error("Error fetching employer stats:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getDetailedAnalytics = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    // User Growth (last 6 months)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const [revenueByCategory, userGrowth, inventoryHealth, monthlyRevenueData] =
+      await Promise.all([
+        // Revenue by Category (more efficient query)
+        prisma.category.findMany({
+          include: {
+            products: {
+              include: {
+                orderItems: {
+                  select: { price: true, quantity: true },
+                },
+              },
+            },
+          },
+        }),
+        // User Growth
+        prisma.user.count({
+          where: { createdAt: { gte: sixMonthsAgo } },
+        }),
+        // Low stock alerts
+        prisma.variant.findMany({
+          where: { stock: { lte: 10 } },
+          include: { product: { select: { title: true } } },
+          take: 10,
+        }),
+        // Monthly Revenue for Chart
+        prisma.order.findMany({
+          where: {
+            createdAt: { gte: sixMonthsAgo },
+            NOT: { status: "CANCELLED" },
+          },
+          select: { totalPrice: true, createdAt: true },
+        }),
+      ]);
+
+    const categoryRevenue = revenueByCategory.map((cat) => ({
+      name: cat.categoryName,
+      revenue: cat.products.reduce(
+        (acc, prod) =>
+          acc +
+          prod.orderItems.reduce(
+            (sum, item) => sum + Number(item.price) * item.quantity,
+            0
+          ),
+        0
+      ),
+    }));
+
+    // Process monthly revenue
+    const months = [
+      "JAN",
+      "FEB",
+      "MAR",
+      "APR",
+      "MAY",
+      "JUN",
+      "JUL",
+      "AUG",
+      "SEP",
+      "OCT",
+      "NOV",
+      "DEC",
+    ];
+    const monthlyStats = Array.from({ length: 6 })
+      .map((_, i) => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - i);
+        const monthName = months[d.getMonth()];
+        const revenue = monthlyRevenueData
+          .filter(
+            (o) =>
+              new Date(o.createdAt).getMonth() === d.getMonth() &&
+              new Date(o.createdAt).getFullYear() === d.getFullYear()
+          )
+          .reduce((acc, o) => acc + Number(o.totalPrice), 0);
+        return { month: monthName, revenue };
+      })
+      .reverse();
+
+    res.status(200).json({
+      success: true,
+      categoryRevenue,
+      userGrowth,
+      inventoryHealth,
+      monthlyStats,
+    });
+  } catch (error) {
+    console.error("Error fetching detailed analytics:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getEmployerProducts = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    const products = await prisma.product.findMany({
+      where: { userId },
+      include: {
+        category: { select: { categoryName: true } },
+        images: true,
+        variants: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    res.status(200).json({ success: true, products });
+  } catch (error) {
+    console.error("Get employer products error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getEmployerOrders = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    // Find all order items that belong to products owned by this employer
+    const orderItems = await prisma.orderItem.findMany({
+      where: { product: { userId } },
+      include: {
+        order: {
+          include: {
+            user: { select: { username: true, email: true } },
+            shippingAddress: true,
+          },
+        },
+        product: { select: { title: true } },
+        variant: { select: { color: true, size: true, sku: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    // Group items by order to show them as distinct orders in the UI
+    const ordersMap = new Map();
+    orderItems.forEach((item: any) => {
+      if (!ordersMap.has(item.orderId)) {
+        ordersMap.set(item.orderId, {
+          ...item.order,
+          items: [],
+        });
+      }
+      ordersMap.get(item.orderId).items.push({
+        id: item.id,
+        productId: item.productId,
+        productTitle: item.product.title,
+        variantInfo: `${item.variant.color} / ${item.variant.size}`,
+        sku: item.variant.sku,
+        quantity: item.quantity,
+        price: item.price,
+        status: item.status,
+        trackingNumber: item.trackingNumber,
+      });
+    });
+
+    const orders = Array.from(ordersMap.values());
+    res.status(200).json({ success: true, orders });
+  } catch (error) {
+    console.error("Get employer orders error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const updateOrderItemStatus = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const userId = req.user?.id;
+    const { orderItemId, status, trackingNumber } = req.body;
+
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    // Verify the order item belongs to the merchant
+    const orderItem = await prisma.orderItem.findUnique({
+      where: { id: orderItemId },
+      include: { product: true },
+    });
+
+    if (!orderItem || orderItem.product.userId !== userId) {
+      return res.status(403).json({ message: "Forbidden: Not your product" });
+    }
+
+    const updated = await prisma.orderItem.update({
+      where: { id: orderItemId },
+      data: {
+        status,
+        trackingNumber: trackingNumber || undefined,
+      },
+    });
+
+    // Optional: Check if all items in the order are SHIPPED/DELIVERED and update main order status
+    // For now, keep it simple.
+
+    res.status(200).json({ success: true, orderItem: updated });
+  } catch (error) {
+    console.error("Update order item status error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 export {
@@ -352,4 +872,14 @@ export {
   getOrder,
   updateOrder,
   deleteOrder,
+  getAdminStats,
+  getEmployerStats,
+  getDetailedAnalytics,
+  getSystemConfig,
+  updateSystemConfig,
+  generateReport,
+  getEmployerProducts,
+  getEmployerOrders,
+  getOrders,
+  updateOrderItemStatus,
 };
