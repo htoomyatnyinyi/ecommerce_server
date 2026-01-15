@@ -24,6 +24,7 @@ import {
   generateReport,
   getEmployerProducts,
   getEmployerOrders,
+  updateOrderItemStatus,
 } from "../controllers/dashboard/admin";
 // import { verifyEmail } from "../controllers/auth";
 
@@ -35,6 +36,7 @@ router.get("/stats", getAdminStats);
 router.get("/employer/stats", getEmployerStats);
 router.get("/employer/products", getEmployerProducts);
 router.get("/employer/orders", getEmployerOrders);
+router.put("/employer/order-item/status", updateOrderItemStatus);
 router.get("/analytics", getDetailedAnalytics);
 router.get("/config", getSystemConfig);
 router.put("/config", updateSystemConfig);

@@ -760,6 +760,8 @@ const getEmployerOrders = async (req: Request, res: Response): Promise<any> => {
         sku: item.variant.sku,
         quantity: item.quantity,
         price: item.price,
+        status: item.status,
+        trackingNumber: item.trackingNumber,
       });
     });
 
@@ -767,6 +769,44 @@ const getEmployerOrders = async (req: Request, res: Response): Promise<any> => {
     res.status(200).json({ success: true, orders });
   } catch (error) {
     console.error("Get employer orders error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const updateOrderItemStatus = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const userId = req.user?.id;
+    const { orderItemId, status, trackingNumber } = req.body;
+
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    // Verify the order item belongs to the merchant
+    const orderItem = await prisma.orderItem.findUnique({
+      where: { id: orderItemId },
+      include: { product: true },
+    });
+
+    if (!orderItem || orderItem.product.userId !== userId) {
+      return res.status(403).json({ message: "Forbidden: Not your product" });
+    }
+
+    const updated = await prisma.orderItem.update({
+      where: { id: orderItemId },
+      data: {
+        status,
+        trackingNumber: trackingNumber || undefined,
+      },
+    });
+
+    // Optional: Check if all items in the order are SHIPPED/DELIVERED and update main order status
+    // For now, keep it simple.
+
+    res.status(200).json({ success: true, orderItem: updated });
+  } catch (error) {
+    console.error("Update order item status error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -795,4 +835,5 @@ export {
   generateReport,
   getEmployerProducts,
   getEmployerOrders,
+  updateOrderItemStatus,
 };
