@@ -149,10 +149,18 @@ export const createPaymentIntent = async (
       description: `Order for ${user.email}`,
     });
 
+    // Generate Ephemeral Key for the customer
+    const ephemeralKey = await stripe.ephemeralKeys.create(
+      { customer: customerId },
+      { apiVersion: "2023-10-16" } // Use a specific version or the one set in config
+    );
+
     res.status(200).json({
       success: true,
       clientSecret: paymentIntent.client_secret,
       paymentIntentId: paymentIntent.id,
+      ephemeralKey: ephemeralKey.secret,
+      customer: customerId,
       amount: totalAmount,
       cartItems: cartItems.map((item) => ({
         productId: item.productId,
