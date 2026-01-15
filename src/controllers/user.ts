@@ -78,3 +78,67 @@ export const updatePassword = async (
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+/**
+ * Save or update an Expo push token for the authenticated user.
+ * This ensures that the mobile app can register its token for notifications.
+ */
+export const savePushToken = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { token } = req.body;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (!token) {
+      return res.status(400).json({ message: "Token is required" });
+    }
+
+    // Check if the token already exists in the system
+    const existingToken = await prisma.pushToken.findUnique({
+      where: { token },
+    });
+
+    if (existingToken) {
+      // If the token already belongs to this user, no action needed
+      if (existingToken.userId === userId) {
+        return res.json({
+          message: "Token already registered",
+          data: existingToken,
+        });
+      } else {
+        // If the token belongs to a different user (e.g., someone logged out and someone else logged in)
+        // transfer the token to the current user.
+        const updatedToken = await prisma.pushToken.update({
+          where: { token },
+          data: { userId },
+        });
+        return res.json({
+          message: "Token transferred to current user",
+          data: updatedToken,
+        });
+      }
+    }
+
+    // Otherwise, create a new record for this token
+    const newToken = await prisma.pushToken.create({
+      data: {
+        token,
+        userId,
+      },
+    });
+
+    res.status(201).json({
+      message: "Token saved successfully",
+      data: newToken,
+    });
+  } catch (error) {
+    console.error("Save push token error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

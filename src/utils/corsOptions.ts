@@ -10,6 +10,8 @@ import { FRONTEND_URL } from "./secrets";
 const allowedOrigins = [
   "http://localhost:5173",
   FRONTEND_URL,
+  "http://localhost:8081",
+  "exp://192.168.1.143:8081",
   "https://your-production-domain.com",
 ];
 

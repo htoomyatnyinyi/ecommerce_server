@@ -363,8 +363,8 @@ export const signin = async (
     });
 
     res.status(200).json({
-      // accessToken,
-      // refreshToken,
+      accessToken,
+      refreshToken,
       user: {
         id: user.id,
         username: user.username,

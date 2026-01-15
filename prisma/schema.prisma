@@ -36,6 +36,7 @@ model User {
   passwordResetTokens PasswordResetToken[] // Add relation for password reset
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  pushTokens    PushToken[]
 }
 
 model PasswordResetToken {
@@ -313,4 +314,14 @@ model SystemConfig {
   globalDiscount  Decimal  @default(0.00) @db.Decimal(5, 2)
   contactEmail    String?
   updatedAt       DateTime @updatedAt
+}
+
+model PushToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }

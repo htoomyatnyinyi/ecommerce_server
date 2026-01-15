@@ -40,7 +40,7 @@ app.use("/api/user", user);
 // --- Route for testing server ---
 app.get("/", (req: Request, res: Response) => {
   console.log(req.body);
-  res.send("API is running now!");
+  res.send("Ecommerce API is online now!");
 });
 
 // Error handling middleware
