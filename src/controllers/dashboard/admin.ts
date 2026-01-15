@@ -363,23 +363,68 @@ const deleteCart = async (req: Request, res: Response): Promise<any> => {
 };
 
 const getOrder = async (req: Request, res: Response): Promise<any> => {
-  const userId = req.user?.id; // const {id} = req.user
-
-  console.log(userId, "middleware");
-
   try {
-    res.status(201).json({ mesg: "success" });
-  } catch (error) {}
+    const { id }: any = req.params;
+    const order = await prisma.order.findUnique({
+      where: { id },
+      include: {
+        user: { select: { username: true, email: true } },
+        shippingAddress: true,
+        items: {
+          include: {
+            product: { select: { title: true } },
+            variant: { select: { color: true, size: true, sku: true } },
+          },
+        },
+      },
+    });
+
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    res.status(200).json({ success: true, order });
+  } catch (error) {
+    console.error("Get order error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getOrders = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const orders = await prisma.order.findMany({
+      include: {
+        user: { select: { username: true, email: true } },
+        shippingAddress: true,
+        items: {
+          include: {
+            product: { select: { title: true } },
+            variant: { select: { color: true, size: true, sku: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    res.status(200).json({ success: true, orders });
+  } catch (error) {
+    console.error("Get orders error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 const updateOrder = async (req: Request, res: Response): Promise<any> => {
-  const userId = req.user?.id; // const {id} = req.user
-
-  console.log(userId, "middleware");
-
   try {
-    res.status(201).json({ mesg: "success" });
-  } catch (error) {}
+    const { id }: any = req.params;
+    const { status } = req.body;
+
+    const order = await prisma.order.update({
+      where: { id },
+      data: { status },
+    });
+
+    res.status(200).json({ success: true, order });
+  } catch (error) {
+    console.error("Update order error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 const deleteOrder = async (req: Request, res: Response): Promise<any> => {
@@ -835,5 +880,6 @@ export {
   generateReport,
   getEmployerProducts,
   getEmployerOrders,
+  getOrders,
   updateOrderItemStatus,
 };
