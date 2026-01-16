@@ -248,6 +248,7 @@ model Address {
   id             String   @id @default(uuid())
   userId         String
   user           User     @relation(fields: [userId], references: [id])
+  label          String? // Home, Work, etc
   street         String
   city           String
   state          String?

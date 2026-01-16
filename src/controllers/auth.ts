@@ -73,7 +73,7 @@ export const signup = async (
         username,
         email,
         password: hashedPassword,
-        role,
+        // role,
         isEmailVerified: false,
       },
     });

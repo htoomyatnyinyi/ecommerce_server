@@ -36,7 +36,8 @@ export const createAddress = async (
       .json({ error: "Unauthorized: User not authenticated." });
   }
 
-  const { street, city, state, country, postalCode, isDefault } = req.body;
+  const { label, street, city, state, country, postalCode, isDefault } =
+    req.body;
 
   console.log(req.body);
 
@@ -57,6 +58,7 @@ export const createAddress = async (
         prisma.address.create({
           data: {
             userId,
+            label,
             street,
             city,
             state,
@@ -73,6 +75,7 @@ export const createAddress = async (
     const newAddress = await prisma.address.create({
       data: {
         userId,
+        label,
         street,
         city,
         state,
@@ -98,7 +101,8 @@ export const updateAddress = async (
 ): Promise<any> => {
   const userId = req.user?.id;
   const { id: addressId }: any = req.params;
-  const { street, city, state, country, postalCode, isDefault } = req.body;
+  const { label, street, city, state, country, postalCode, isDefault } =
+    req.body;
 
   try {
     if (isDefault) {
@@ -111,7 +115,15 @@ export const updateAddress = async (
         // 2. Update the target address
         prisma.address.update({
           where: { id: addressId },
-          data: { street, city, state, country, postalCode, isDefault: true },
+          data: {
+            label,
+            street,
+            city,
+            state,
+            country,
+            postalCode,
+            isDefault: true,
+          },
         }),
       ]);
       return res.status(200).json(updatedAddress);
@@ -120,7 +132,7 @@ export const updateAddress = async (
     // Standard update if not changing the default status
     const updatedAddress = await prisma.address.update({
       where: { id: addressId, userId }, // Ensures user can only update their own address
-      data: { street, city, state, country, postalCode },
+      data: { label, street, city, state, country, postalCode },
     });
 
     res.status(200).json(updatedAddress);

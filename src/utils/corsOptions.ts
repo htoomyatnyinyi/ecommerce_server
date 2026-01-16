@@ -12,6 +12,8 @@ const allowedOrigins = [
   FRONTEND_URL,
   "exp://192.168.1.143:8081",
   "exp://172.17.0.1:8081",
+  "exp://192.168.137.136:8081",
+  "exp://192.168.1.67:8081",
   "http://localhost:8081",
   "https://your-production-domain.com",
 ];
