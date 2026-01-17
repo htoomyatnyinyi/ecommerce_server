@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../config/database";
 import { successResponse, errorResponse } from "../utils/response";
+import { Decimal } from "@prisma/client/runtime/library";
 
 interface GetProductsQuery {
   page?: string;
@@ -108,6 +109,21 @@ export const getProducts = async (
       where.AND.push({
         category: {
           categoryName: { equals: category },
+        },
+      });
+    }
+
+    const { minPrice, maxPrice } = req.query as GetProductsQuery;
+    if (minPrice || maxPrice) {
+      const priceFilter: any = {};
+      if (minPrice) priceFilter.gte = new Decimal(minPrice);
+      if (maxPrice) priceFilter.lte = new Decimal(maxPrice);
+
+      where.AND.push({
+        variants: {
+          some: {
+            price: priceFilter,
+          },
         },
       });
     }
