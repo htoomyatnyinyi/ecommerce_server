@@ -5,7 +5,7 @@ import {
   confirmPayment,
   handleWebhook,
   getStripeConfig,
-  cancelPaymentIntent,
+  // cancelPaymentIntent, // checkout not setup yet.
 } from "../controllers/checkout";
 
 const router = express.Router();
@@ -23,6 +23,6 @@ router.post(
 // Protected routes
 router.post("/create-payment-intent", authenticated, createPaymentIntent);
 router.post("/confirm-payment", authenticated, confirmPayment);
-router.post("/cancel-payment", authenticated, cancelPaymentIntent);
+// router.post("/cancel-payment", authenticated, cancelPaymentIntent);
 
 export default router;

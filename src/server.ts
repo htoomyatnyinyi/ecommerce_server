@@ -39,14 +39,18 @@ app.use("/api/user", user);
 
 // --- Route for testing server ---
 app.get("/", (req: Request, res: Response) => {
-  console.log(req.body);
+  // console.log(req.body);
   res.send("Ecommerce API is online now!");
 });
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error(err.stack);
-  res.status(500).json({ error: "Something went wrong!" });
+  res.status(500).json({
+    success: false,
+    message: "Something went wrong!",
+    error: process.env.NODE_ENV === "development" ? err.message : undefined,
+  });
 });
 
 app.listen(PORT, () => {

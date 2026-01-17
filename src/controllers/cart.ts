@@ -1,325 +1,166 @@
 import { Request, Response } from "express";
 import prisma from "../config/database";
+import { successResponse, errorResponse } from "../utils/response";
 
-interface CartItem {
-  productId: string;
-  variantId: string;
-  quantity: number;
-}
-interface CartRequest {
-  items: CartItem[];
-  // You can add more fields if needed, like userId, etc.
-  // userId?: string; // Optional if you want to include userId in the request
-}
-
-const addToCart = async (req: Request, res: Response): Promise<any> => {
-  const userId = req.user?.id;
-
-  if (!userId) {
-    return res
-      .status(401)
-      .json({ error: "Unauthorized: User not authenticated." });
-  }
-  // const data = req.body;
-
-  const { productId, variantId, quantity } = req.body;
-  console.log(productId, variantId, quantity, "at addToCart");
-
+// Add item to cart
+export const addToCart = async (req: Request, res: Response): Promise<any> => {
   try {
-    // Check if product exists and has enough stock
-    const product = await prisma.product.findUnique({
-      where: { id: productId },
+    const userId = req.user?.id;
+    if (!userId) {
+      return errorResponse(res, "Unauthorized: User not authenticated", 401);
+    }
+
+    const { productId, variantId, quantity = 1 } = req.body;
+
+    if (!productId || !variantId) {
+      return errorResponse(res, "Product ID and Variant ID are required", 400);
+    }
+
+    // Check if product and variant exist
+    const variant = await prisma.variant.findUnique({
+      where: { id: variantId },
+      include: { product: true },
     });
 
-    if (!product) {
-      return res.status(404).json({ msg: "Product Not Found" });
+    if (!variant || variant.productId !== productId) {
+      return errorResponse(res, "Product or Variant not found", 404);
+    }
+
+    // Find or create user cart
+    let userCart = await prisma.cart.findFirst({
+      where: { userId },
+    });
+
+    if (!userCart) {
+      userCart = await prisma.cart.create({
+        data: { userId },
+      });
     }
 
     // Check if item already in cart
     const existingItem = await prisma.cartItem.findFirst({
-      where: { cart: { userId }, productId: productId, variantId: variantId },
+      where: {
+        cartId: userCart.id,
+        productId,
+        variantId,
+      },
     });
 
-    // console.log(existingItem, "eistingItem");
-
     let cartItem;
-
     if (existingItem) {
-      // update quantity
-      // console.log(existingItem, "alredy existing cart");
-      res.json(existingItem);
-      // cartItem = await prisma.cartItem.update({
-      //   where: { id: existingItem.id }, // only for add to cart but variantId haven't apply
-      //   data: { quantity: existingItem.quantity + quantity },
-      //   include: { product: true },
-      // });
+      // Update quantity
       cartItem = await prisma.cartItem.update({
-        where: { id: existingItem.id }, // Ensure variantId is included in the update
+        where: { id: existingItem.id },
         data: { quantity: existingItem.quantity + quantity },
-        include: {
-          product: true,
-          variant: true, // Include variant details if needed
-        },
+        include: { product: true, variant: true },
       });
     } else {
-      // Find the user's cart by userId
-      let userCart = await prisma.cart.findFirst({
-        where: { userId },
-      });
-
-      // If the cart doesn't exist, create one
-      if (!userCart) {
-        userCart = await prisma.cart.create({
-          data: { userId },
-        });
-      }
-
-      // add new item to cartItem table
+      // Create new cart item
       cartItem = await prisma.cartItem.create({
         data: {
-          cart: { connect: { id: userCart.id } },
-          product: { connect: { id: productId } },
-          variant: { connect: { id: variantId } }, // Assuming variantId is provided
+          cartId: userCart.id,
+          productId,
+          variantId,
           quantity,
         },
-        include: {
-          product: true,
-          variant: true, // Include variant details if needed
-        },
+        include: { product: true, variant: true },
       });
-
-      // #
-
-      // add new item into cart table
-      // const cartItem = await prisma.cart.create({
-      //   data: {
-      //     userId,
-      //     items: {
-      //       create: {
-      //         productId,
-      //         variantId,
-      //         quantity,
-      //       },
-      //     },
-      //   },
-      //   include: {
-      //     items: {
-      //       select: {
-      //         id: true,
-      //         cartId: true,
-      //         quantity: true,
-      //       },
-      //     },
-      //   },
-      // });
-
-      const addToOrderItem = await prisma.orderItem.create({
-        data: {
-          // productId,
-          // variantId,
-          product: { connect: { id: productId } },
-          variant: { connect: { id: variantId } },
-          quantity,
-          price: 1000 * quantity, // Replace 1000 with actual price if available
-          order: {
-            create: {
-              userId,
-              totalPrice: 1000 * quantity, // Replace 1000 with actual price if available
-              // shippingAddressId: "some-shipping-address-id", // Add shipping address ID if available
-            },
-          },
-        },
-      });
-      console.log(addToOrderItem, "addToOrderItem");
-
-      res.status(200).json(cartItem);
     }
+
+    return successResponse(res, cartItem, "Item added to cart successfully");
   } catch (error) {
-    res.status(500).json({ msg: "error" });
+    return errorResponse(res, "Failed to add item to cart", 500, error);
   }
 };
 
-// Get the user's cart
-const getCart = async (req: Request, res: Response): Promise<any> => {
-  const userId = req.user?.id; // Assuming user ID is stored in req.user
-  if (!userId) {
-    return res
-      .status(401)
-      .json({ error: "Unauthorized: User not authenticated." });
-  }
-  // console.log("User ID:", userId);
-
+// Get user's cart
+export const getCart = async (req: Request, res: Response): Promise<any> => {
   try {
-    const getCart = await prisma.cartItem.findMany({
-      // include: {
-      // items: {
-      //   include: {
-      //     // product: {
-      //     //   select: { title: true, description: true },
-      //     // },
-      //     product: true,
-      //     // variant: {
-      //     //   select: { sku: true, stock: true, price: true },
-      //     // },
-      //     variant: true,
-      //   },
-      // },
-      // },
+    const userId = req.user?.id;
+    if (!userId) {
+      return errorResponse(res, "Unauthorized", 401);
+    }
+
+    const cartItems = await prisma.cartItem.findMany({
+      where: { cart: { userId } },
       include: {
         product: {
-          include: {
-            images: true,
-          },
+          include: { images: true },
         },
-        variant: true, // Include variant details if needed
+        variant: true,
       },
-      where: { cart: { userId } },
-      // orderBy: { createdAt: "desc" }, // Optional: Order by creation date
+      orderBy: { createdAt: "desc" },
     });
-    // console.log(getCart, "getCart");
 
     let totalPrice = 0;
     let totalQuantity = 0;
 
-    getCart.forEach((item) => {
-      console.log(item, "for each");
+    cartItems.forEach((item) => {
       const price = Number(item.variant?.price) || 0;
       const quantity = Number(item.quantity) || 0;
-
       totalPrice += price * quantity;
       totalQuantity += quantity;
     });
 
-    // console.log(totalPrice, "totalPrice");
-
-    // // console.log(getCart, "getCart");
-    // if (!getCart || getCart.length === 0) {
-    //   return res.status(404).json({ message: "Cart is empty" });
-    // }
-    // // If you want to return the cart items with product and variant details
-    // // res.json(getCart);
-    // // If you want to return the cart items without product and variant details
-    // // res.json(getCart.map(cart => cart.items));
-
-    // // If you want to return the items only
-    // const a = getCart.map((cart) => cart.items);
-    // console.log({ ...a[0] }, "getCart items");
-
-    // // console.log({ ...getCart });
-
-    res.status(200).json({ getCart, totalPrice, totalQuantity });
+    return successResponse(res, {
+      items: cartItems,
+      totalPrice,
+      totalQuantity,
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to fetch cart" });
+    return errorResponse(res, "Failed to fetch cart", 500, error);
   }
-
-  // before make a return data change.
-  // try {
-  //   const getCart = await prisma.cart.findMany({
-  //     include: {
-  //       items: {
-  //         include: {
-  //           // product: {
-  //           //   select: { title: true, description: true },
-  //           // },
-  //           product: true,
-  //           // variant: {
-  //           //   select: { sku: true, stock: true, price: true },
-  //           // },
-  //           variant: true,
-  //         },
-  //       },
-  //     },
-  //   });
-  //   // console.log(getCart, "getCart");
-  //   if (!getCart || getCart.length === 0) {
-  //     return res.status(404).json({ message: "Cart is empty" });
-  //   }
-  //   // If you want to return the cart items with product and variant details
-  //   // res.json(getCart);
-  //   // If you want to return the cart items without product and variant details
-  //   // res.json(getCart.map(cart => cart.items));
-
-  //   // If you want to return the items only
-  //   const a = getCart.map((cart) => cart.items);
-  //   console.log({ ...a[0] }, "getCart items");
-
-  //   // console.log({ ...getCart });
-  //   res.status(200).json(getCart);
-  // } catch (error) {
-  //   console.error(error);
-  // }
 };
 
-// Remove an item from the cart
-const removeCart = async (req: Request, res: Response): Promise<any> => {
-  const userId = req.user?.id;
-  if (!userId) {
-    return res
-      .status(401)
-      .json({ error: "Unauthorized: User not authenticated." });
-  }
-
-  const { removeCartItemId } = req.body;
-  console.log(removeCartItemId, "removeCartItemId", req.body);
-  // const removeCartItemId = req.params.id;
-
-  // console.log(removeCartItemId, "removeCartItemId", req.body);
-
+// Remove item from cart
+export const removeCart = async (req: Request, res: Response): Promise<any> => {
   try {
-    const removedCartItem = await prisma.cartItem.delete({
+    const userId = req.user?.id;
+    const { removeCartItemId } = req.body;
+
+    if (!userId) return errorResponse(res, "Unauthorized", 401);
+    if (!removeCartItemId)
+      return errorResponse(res, "Item ID is required", 400);
+
+    const deletedItem = await prisma.cartItem.delete({
       where: { id: removeCartItemId, cart: { userId } },
     });
 
-    res
-      .status(200)
-      .json({ success: true, msg: "remove cart already.", removedCartItem });
+    return successResponse(res, deletedItem, "Item removed from cart");
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to remove item from cart" });
+    return errorResponse(res, "Failed to remove item from cart", 500, error);
   }
 };
 
-// Update the quantity of an item in the cart
-const updateCart = async (req: Request, res: Response): Promise<any> => {
-  const userId = req.user?.id;
-  if (!userId) {
-    return res
-      .status(401)
-      .json({ error: "Unauthorized: User not authenticated." });
-  }
-
-  // console.log(req.body, "updateCart body");
-  const { cartItemId, quantity } = req.body;
-  if (!cartItemId || quantity === undefined) {
-    return res
-      .status(400)
-      .json({ error: "Cart item ID and quantity are required." });
-  }
-
+// Update cart item quantity
+export const updateCart = async (req: Request, res: Response): Promise<any> => {
   try {
-    const updatedCartItem = await prisma.cartItem.update({
+    const userId = req.user?.id;
+    const { cartItemId, quantity } = req.body;
+
+    if (!userId) return errorResponse(res, "Unauthorized", 401);
+    if (!cartItemId || quantity === undefined)
+      return errorResponse(res, "Item ID and quantity are required", 400);
+
+    const updatedItem = await prisma.cartItem.update({
       where: { id: cartItemId, cart: { userId } },
-      data: { quantity },
+      data: { quantity: Math.max(1, quantity) },
     });
 
-    res.status(200).json({ success: true, updatedCartItem });
+    return successResponse(res, updatedItem, "Cart updated");
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to update cart item quantity" });
+    return errorResponse(res, "Failed to update cart", 500, error);
   }
 };
 
-// total price of items in a cart based on the cart ID.
-const cartTotal = async (req: Request, res: Response): Promise<any> => {
-  const { cartId } = req.body;
-  // console.log(cartId, req.body);
-
-  if (!cartId) return res.status(400).json({ error: "Cart ID is required." });
-
+// Calculate cart total
+export const cartTotal = async (req: Request, res: Response): Promise<any> => {
   try {
-    const cartItems = await prisma.cart.findMany({
-      where: { id: cartId },
+    const userId = req.user?.id;
+    if (!userId) return errorResponse(res, "Unauthorized", 401);
+
+    const cart = await prisma.cart.findFirst({
+      where: { userId },
       include: {
         items: {
           include: { variant: true },
@@ -327,57 +168,18 @@ const cartTotal = async (req: Request, res: Response): Promise<any> => {
       },
     });
 
-    // console.log(cartItems, cartItems[0]?.items, "cartItems");
+    if (!cart) {
+      return successResponse(res, { totalPrice: 0, items: [] });
+    }
 
     let totalPrice = 0;
-
-    cartItems[0]?.items.forEach((item) => {
+    cart.items.forEach((item) => {
       const price = Number(item.variant?.price) || 0;
-      const quantity = Number(item.quantity) || 0;
-      totalPrice += price * quantity;
+      totalPrice += price * item.quantity;
     });
 
-    console.log(totalPrice, "totalPrice");
-
-    res.status(201).json({ totalPrice, cartItems: cartItems[0]?.items });
+    return successResponse(res, { totalPrice, items: cart.items });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to calculate cart total" });
+    return errorResponse(res, "Failed to calculate total", 500, error);
   }
 };
-
-// wrong function name, it should be cartTotal
-// uncomment if you want to use this function
-// This function calculates the total price of items in a cart based on the cart ID.
-// It retrieves the cart items, calculates the total price by multiplying the price of each variant by
-// const cartTotal = async (req: Request, res: Response): Promise<any> => {
-//   const { cartId } = req.body;
-//   // console.log(cartId, req.body);
-
-//   if (!cartId) return res.status(400).json({ error: "Cart ID is required." });
-
-//   try {
-//     const cartItems = await prisma.cartItem.findMany({
-//       where: { id: cartId },
-//       include: { product: true, variant: true },
-//     });
-
-//     // console.log(cartItems);
-
-//     let totalPrice = 0;
-
-//     cartItems.forEach((item) => {
-//       const price = Number(item.variant?.price) || 0;
-//       const quantity = Number(item.quantity) || 0;
-//       totalPrice += price * quantity;
-//     });
-
-//     console.log(totalPrice, "totalPrice");
-
-//     res.status(201).json({ totalPrice, cartItems });
-//   } catch (error) {
-//     console.error(error);
-//   }
-// };
-
-export { addToCart, getCart, removeCart, updateCart, cartTotal };

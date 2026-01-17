@@ -4,34 +4,25 @@ import prisma from "../../config/database";
 import { JWT_SECRET, NODE_ENV } from "../../utils/secrets";
 import bcrypt from "bcrypt";
 import { createAccountType } from "../../types/adminTypes";
+import { successResponse, errorResponse } from "../../utils/response";
 
 const createAccount = async (
   req: Request<{}, {}, createAccountType>,
   res: Response
 ): Promise<any> => {
-  // const userId = req.user?.id; // const {id} = req.user
-
-  // console.log(userId, "middleware");
-
   try {
     const { username, email, password, confirmPassword, role } = req.body;
 
     if (password !== confirmPassword) {
-      res.status(400).json({ error: "Passwords do not match" });
-      return;
+      return errorResponse(res, "Passwords do not match", 400);
+    }
+
+    if (!role || !["ADMIN", "EMPLOYER", "USER"].includes(role)) {
+      return errorResponse(res, "Invalid or missing role", 400);
     }
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    console.log(role, "role");
-    if (!role) {
-      res.status(400).json({ error: "Role is required" });
-      return;
-    }
-    if (!["ADMIN", "EMPLOYER", "USER"].includes(role)) {
-      res.status(400).json({ error: "Invalid role" });
-      return;
-    }
 
     const user = await prisma.user.create({
       data: {
@@ -42,66 +33,62 @@ const createAccount = async (
       },
     });
 
-    // console.log(user, "check");
-
     const accessToken = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       JWT_SECRET,
-      {
-        expiresIn: "1d", //7
-      }
+      { expiresIn: "1d" }
     );
 
     res.cookie("access_", accessToken, {
       httpOnly: true,
       secure: NODE_ENV === "production",
-      maxAge: 1000 * 60 * 60 * 24, // 1 day
+      maxAge: 1000 * 60 * 60 * 24,
       sameSite: "strict",
     });
 
-    res.status(201).json({
-      user: {
+    return successResponse(
+      res,
+      {
         id: user.id,
         username: user.username,
         email: user.email,
         role: user.role,
         createdAt: user.createdAt,
       },
-    });
+      "Account created successfully",
+      201
+    );
   } catch (error: any) {
-    console.log(error);
     if (error.code === "P2002") {
-      res.status(400).json({
-        error: "User with this email or username already exists",
-      });
-      return;
+      return errorResponse(
+        res,
+        "User with this email or username already exists",
+        400
+      );
     }
-    res.status(400).json({ error: error.message });
+    return errorResponse(
+      res,
+      error.message || "Failed to create account",
+      500,
+      error
+    );
   }
 };
 
-// const getAccount = async (req: Request, res: Response): Promise<any> => {
-//   const userId = req.user?.id; // const {id} = req.user
-
-//   console.log(userId, "middleware");
-
-//   try {
-//     res.status(201).json({ mesg: "success" });
-//   } catch (error) {}
-// };
-
 const getAccounts = async (req: Request, res: Response): Promise<any> => {
-  const userId = req.user?.id;
-  const userRole = req.user?.role;
-
-  console.log(userId, userRole, "middleware");
-
   try {
-    const accounts = await prisma.user.findMany();
-    console.log(accounts);
-    res.status(200).json(accounts);
+    const accounts = await prisma.user.findMany({
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        role: true,
+        createdAt: true,
+      },
+    });
+    return successResponse(res, accounts, "Accounts fetched successfully");
   } catch (error) {
-    res.status(400).json(error);
+    return errorResponse(res, "Failed to fetch accounts", 500, error);
   }
 };
 
@@ -124,39 +111,26 @@ interface UpdateAccountBody {
   // Add other fields as needed, but avoid sensitive fields like password or role
 }
 
-const updateAccount = async (req: Request, res: Response): Promise<void> => {
+const updateAccount = async (req: Request, res: Response): Promise<any> => {
   try {
-    const userId = req.user?.id; // Admin or user ID from middleware
-    const userRole = req.user?.role; // Role from middleware
-    const { id: accountId }: any = req.params; // Extract accountId from params
-    const { username, email, role } = req.body as UpdateAccountBody; // Extract fields to update
-
-    // Validate input
-    if (!accountId) {
-      res.status(400).json({ message: "Account ID is required" });
-      return;
-    }
+    const userId = req.user?.id;
+    const userRole = req.user?.role;
+    const accountId = req.params.id as string;
+    const { username, email, role } = req.body as UpdateAccountBody;
 
     if (!username && !email && !role) {
-      res.status(400).json({
-        message: "At least one field (username or email) must be provided",
-      });
-      return;
+      return errorResponse(res, "At least one field must be provided", 400);
     }
 
-    // Authorization check
     if (userRole !== "ADMIN" && userId !== accountId) {
-      res.status(403).json({ message: "Unauthorized to update this account" });
-      return;
+      return errorResponse(res, "Unauthorized to update this account", 403);
     }
 
-    // Prepare update data, only including provided fields
     const updateData: UpdateAccountBody = {};
     if (username) updateData.username = username;
     if (email) updateData.email = email;
     if (role) updateData.role = role;
 
-    // Perform the update
     const updatedUser = await prisma.user.update({
       where: { id: accountId },
       data: updateData,
@@ -168,14 +142,9 @@ const updateAccount = async (req: Request, res: Response): Promise<void> => {
       },
     });
 
-    // Send response
-    res.status(200).json({
-      message: "Account updated successfully",
-      user: updatedUser,
-    } as UpdateAccountResponse);
+    return successResponse(res, updatedUser, "Account updated successfully");
   } catch (error) {
-    console.error("Error updating account:", error);
-    res.status(500).json({ message: "Internal server error" });
+    return errorResponse(res, "Failed to update account", 500, error);
   }
 };
 
@@ -184,103 +153,84 @@ interface DeleteAccountResponse {
   message: string;
 }
 
-const deleteAccount = async (req: Request, res: Response): Promise<void> => {
+const deleteAccount = async (req: Request, res: Response): Promise<any> => {
   try {
-    const userId = req.user?.id; // Admin or user ID from middleware
-    const userRole = req.user?.role; // Role from middleware
-    const { id: accountId }: any = req.params; // Extract accountId from params
+    const userId = req.user?.id;
+    const userRole = req.user?.role;
+    const accountId = req.params.id as string;
 
-    // Validate input
-    if (!accountId) {
-      res.status(400).json({ message: "Account ID is required" });
-      return;
-    }
-
-    // Authorization check
     if (userRole !== "ADMIN" && userId !== accountId) {
-      res.status(403).json({ message: "Unauthorized to delete this account" });
-      return;
+      return errorResponse(res, "Unauthorized to delete this account", 403);
     }
 
-    // Check if the user exists
-    const user = await prisma.user.findUnique({
-      where: { id: accountId },
-    });
-
-    if (!user) {
-      res.status(404).json({ message: "User not found" });
-      return;
-    }
-
-    // Perform the deletion
     await prisma.user.delete({
       where: { id: accountId },
     });
 
-    // Send response
-    res.status(200).json({
-      message: "Account deleted successfully",
-    } as DeleteAccountResponse);
+    return successResponse(res, null, "Account deleted successfully");
   } catch (error) {
-    console.error("Error deleting account:", error);
-    res.status(500).json({ message: "Internal server error" });
+    return errorResponse(res, "Failed to delete account", 500, error);
   }
 };
 
 const createProduct = async (req: Request, res: Response): Promise<any> => {
-  const userId = req.user?.id; // const {id} = req.user
-
-  console.log(userId, "middleware");
-
   try {
-    res.status(201).json({ mesg: "success" });
-  } catch (error) {}
+    return errorResponse(res, "Use main product controller for creation", 400);
+  } catch (error) {
+    return errorResponse(res, "Failed to create product", 500, error);
+  }
 };
+
 const getProducts = async (req: Request, res: Response): Promise<any> => {
-  const userId = req.user?.id; // const {id} = req.user
-
-  console.log(userId, "middleware");
-
   try {
-    res.status(201).json({ mesg: "success" });
-  } catch (error) {}
+    const products = await prisma.product.findMany({
+      include: {
+        category: { select: { categoryName: true } },
+        images: true,
+        variants: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    return successResponse(res, products, "Products fetched successfully");
+  } catch (error) {
+    return errorResponse(res, "Failed to fetch products", 500, error);
+  }
 };
 
 const getProductById = async (req: Request, res: Response): Promise<any> => {
-  const userId = req.user?.id; // const {id} = req.user
-
-  console.log(userId, "middleware");
-
   try {
-    res.status(201).json({ mesg: "success" });
-  } catch (error) {}
+    const productId = req.params.id as string;
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        category: { select: { categoryName: true } },
+        images: true,
+        variants: true,
+      },
+    });
+    if (!product) return errorResponse(res, "Product not found", 404);
+    return successResponse(res, product, "Product fetched successfully");
+  } catch (error) {
+    return errorResponse(res, "Failed to fetch product", 500, error);
+  }
 };
 
 const updateProduct = async (req: Request, res: Response): Promise<any> => {
-  const { id }: any = req.params;
-  const { title, description, categoryId, variants, images } = req.body;
-
   try {
+    const productId = req.params.id as string;
+    const { title, description, categoryId, variants, images } = req.body;
+
     const updatedProduct = await prisma.$transaction(async (tx) => {
-      // Update basic product info
       const product = await tx.product.update({
-        where: { id },
-        data: {
-          title,
-          description,
-          categoryId,
-        },
+        where: { id: productId },
+        data: { title, description, categoryId },
       });
 
-      // Handle variants
       if (variants && variants.length > 0) {
-        // Simple approach: delete existing and create new
-        // Better approach: update existing, create new, delete missing
-        // For now, let's go with the simpler approach for this MVP
-        await tx.variant.deleteMany({ where: { productId: id } });
+        await tx.variant.deleteMany({ where: { productId } });
         await tx.variant.createMany({
           data: variants.map((v: any) => ({
-            productId: id,
+            productId,
             sku: v.sku,
             price: v.price,
             stock: v.stock,
@@ -290,83 +240,87 @@ const updateProduct = async (req: Request, res: Response): Promise<any> => {
         });
       }
 
-      // Handle images
       if (images && images.length > 0) {
-        await tx.image.deleteMany({ where: { productId: id } });
+        await tx.image.deleteMany({ where: { productId } });
         await tx.image.createMany({
           data: images.map((img: any) => ({
-            productId: id,
+            productId,
             url: img.url,
             altText: img.altText,
             isPrimary: img.isPrimary,
           })),
         });
       }
-
       return product;
     });
 
-    res.status(200).json({ success: true, data: updatedProduct });
+    return successResponse(res, updatedProduct, "Product updated successfully");
   } catch (error) {
-    console.error("Update product error:", error);
-    res.status(500).json({ message: "Failed to update product" });
+    return errorResponse(res, "Failed to update product", 500, error);
   }
 };
 
 const deleteProduct = async (req: Request, res: Response): Promise<any> => {
-  const { id }: any = req.params;
-
   try {
+    const productId = req.params.id as string;
     await prisma.$transaction([
-      prisma.image.deleteMany({ where: { productId: id } }),
-      prisma.variant.deleteMany({ where: { productId: id } }),
-      prisma.product.delete({ where: { id } }),
+      prisma.image.deleteMany({ where: { productId } }),
+      prisma.variant.deleteMany({ where: { productId } }),
+      prisma.product.delete({ where: { id: productId } }),
     ]);
-
-    res
-      .status(200)
-      .json({ success: true, message: "Product deleted successfully" });
+    return successResponse(res, null, "Product deleted successfully");
   } catch (error) {
-    console.error("Delete product error:", error);
-    res.status(500).json({ message: "Failed to delete product" });
+    return errorResponse(res, "Failed to delete product", 500, error);
   }
 };
 
 const getCart = async (req: Request, res: Response): Promise<any> => {
-  const userId = req.user?.id; // const {id} = req.user
-
-  console.log(userId, "middleware");
-
   try {
-    res.status(201).json({ mesg: "success" });
-  } catch (error) {}
+    const carts = await prisma.cart.findMany({
+      include: {
+        user: { select: { username: true, email: true } },
+        items: {
+          include: {
+            product: { select: { title: true } },
+            variant: { select: { color: true, size: true } },
+          },
+        },
+      },
+    });
+    return successResponse(res, carts, "Carts fetched successfully");
+  } catch (error) {
+    return errorResponse(res, "Failed to fetch carts", 500, error);
+  }
 };
 
 const updateCart = async (req: Request, res: Response): Promise<any> => {
-  const userId = req.user?.id; // const {id} = req.user
-
-  console.log(userId, "middleware");
-
   try {
-    res.status(201).json({ mesg: "success" });
-  } catch (error) {}
+    const cartId = req.params.id as string;
+    const cart = await prisma.cart.update({
+      where: { id: cartId },
+      data: { items: { deleteMany: {} } },
+    });
+    return successResponse(res, cart, "Cart updated (cleared) successfully");
+  } catch (error) {
+    return errorResponse(res, "Failed to update cart", 500, error);
+  }
 };
 
 const deleteCart = async (req: Request, res: Response): Promise<any> => {
-  const userId = req.user?.id; // const {id} = req.user
-
-  console.log(userId, "middleware");
-
   try {
-    res.status(201).json({ mesg: "success" });
-  } catch (error) {}
+    const cartId = req.params.id as string;
+    await prisma.cart.delete({ where: { id: cartId } });
+    return successResponse(res, null, "Cart deleted successfully");
+  } catch (error) {
+    return errorResponse(res, "Failed to delete cart", 500, error);
+  }
 };
 
 const getOrder = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { id }: any = req.params;
+    const orderId = req.params.id as string;
     const order = await prisma.order.findUnique({
-      where: { id },
+      where: { id: orderId },
       include: {
         user: { select: { username: true, email: true } },
         shippingAddress: true,
@@ -379,11 +333,10 @@ const getOrder = async (req: Request, res: Response): Promise<any> => {
       },
     });
 
-    if (!order) return res.status(404).json({ message: "Order not found" });
-    res.status(200).json({ success: true, order });
+    if (!order) return errorResponse(res, "Order not found", 404);
+    return successResponse(res, order, "Order fetched successfully");
   } catch (error) {
-    console.error("Get order error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    return errorResponse(res, "Failed to fetch order", 500, error);
   }
 };
 
@@ -403,37 +356,36 @@ const getOrders = async (req: Request, res: Response): Promise<any> => {
       orderBy: { createdAt: "desc" },
     });
 
-    res.status(200).json({ success: true, orders });
+    return successResponse(res, orders, "Orders fetched successfully");
   } catch (error) {
-    console.error("Get orders error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    return errorResponse(res, "Failed to fetch orders", 500, error);
   }
 };
 
 const updateOrder = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { id }: any = req.params;
+    const orderId = req.params.id as string;
     const { status } = req.body;
 
     const order = await prisma.order.update({
-      where: { id },
+      where: { id: orderId },
       data: { status },
     });
 
-    res.status(200).json({ success: true, order });
+    return successResponse(res, order, "Order status updated successfully");
   } catch (error) {
-    console.error("Update order error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    return errorResponse(res, "Failed to update order status", 500, error);
   }
 };
 
 const deleteOrder = async (req: Request, res: Response): Promise<any> => {
-  const userId = req.user?.id; // const {id} = req.user
-
-  console.log(userId, "middleware");
   try {
-    res.status(201).json({ mesg: "success" });
-  } catch (error) {}
+    const orderId = req.params.id as string;
+    await prisma.order.delete({ where: { id: orderId } });
+    return successResponse(res, null, "Order deleted successfully");
+  } catch (error) {
+    return errorResponse(res, "Failed to delete order", 500, error);
+  }
 };
 
 const getSystemConfig = async (req: Request, res: Response): Promise<any> => {
@@ -448,10 +400,18 @@ const getSystemConfig = async (req: Request, res: Response): Promise<any> => {
         globalDiscount: 0,
       },
     });
-    res.status(200).json({ success: true, data: config });
+    return successResponse(
+      res,
+      config,
+      "System configuration fetched successfully"
+    );
   } catch (error) {
-    console.error("Get system config error:", error);
-    res.status(500).json({ message: "Failed to fetch system config" });
+    return errorResponse(
+      res,
+      "Failed to fetch system configuration",
+      500,
+      error
+    );
   }
 };
 
@@ -459,8 +419,9 @@ const updateSystemConfig = async (
   req: Request,
   res: Response
 ): Promise<any> => {
-  const { siteName, maintenanceMode, globalDiscount, contactEmail } = req.body;
   try {
+    const { siteName, maintenanceMode, globalDiscount, contactEmail } =
+      req.body;
     const config = await prisma.systemConfig.update({
       where: { id: "global" },
       data: {
@@ -470,16 +431,24 @@ const updateSystemConfig = async (
         contactEmail,
       },
     });
-    res.status(200).json({ success: true, data: config });
+    return successResponse(
+      res,
+      config,
+      "System configuration updated successfully"
+    );
   } catch (error) {
-    console.error("Update system config error:", error);
-    res.status(500).json({ message: "Failed to update system config" });
+    return errorResponse(
+      res,
+      "Failed to update system configuration",
+      500,
+      error
+    );
   }
 };
 
 const generateReport = async (req: Request, res: Response): Promise<any> => {
   try {
-    const [totalRevenue, totalUsers, totalOrders, latestOrders, categorySales] =
+    const [totalRevenue, totalUsers, totalOrders, latestOrders] =
       await Promise.all([
         prisma.order.aggregate({
           _sum: { totalPrice: true },
@@ -491,21 +460,8 @@ const generateReport = async (req: Request, res: Response): Promise<any> => {
           orderBy: { createdAt: "desc" },
           include: { user: { select: { username: true, email: true } } },
         }),
-        prisma.product.findMany({
-          select: {
-            title: true,
-            category: { select: { categoryName: true } },
-            orderItems: {
-              select: {
-                quantity: true,
-                price: true,
-              },
-            },
-          },
-        }),
       ]);
 
-    // Simple report summary
     const report = {
       generatedAt: new Date(),
       summary: {
@@ -525,14 +481,13 @@ const generateReport = async (req: Request, res: Response): Promise<any> => {
       recentActivity: latestOrders,
     };
 
-    res.status(200).json({ success: true, report });
+    return successResponse(res, report, "Report generated successfully");
   } catch (error) {
-    console.error("Generate report error:", error);
-    res.status(500).json({ message: "Failed to generate system report" });
+    return errorResponse(res, "Failed to generate system report", 500, error);
   }
 };
 
-const getAdminStats = async (req: Request, res: Response): Promise<void> => {
+const getAdminStats = async (req: Request, res: Response): Promise<any> => {
   try {
     const [
       totalUsers,
@@ -567,35 +522,33 @@ const getAdminStats = async (req: Request, res: Response): Promise<void> => {
 
     const globalRevenue = globalRevenueResult?._sum?.totalPrice || 0;
 
-    res.status(200).json({
-      success: true,
-      stats: {
-        totalUsers,
-        totalProducts,
-        totalOrders,
-        globalRevenue,
-        lowStockCount,
-        uniqueCategoriesCount,
+    return successResponse(
+      res,
+      {
+        stats: {
+          totalUsers,
+          totalProducts,
+          totalOrders,
+          globalRevenue,
+          lowStockCount,
+          uniqueCategoriesCount,
+        },
+        recentActivities: {
+          users: recentUsers,
+          orders: recentOrders,
+        },
       },
-      recentActivities: {
-        users: recentUsers,
-        orders: recentOrders,
-      },
-    });
+      "Admin statistics fetched successfully"
+    );
   } catch (error) {
-    console.error("Error fetching admin stats:", error);
-    res.status(500).json({ message: "Internal server error" });
+    return errorResponse(res, "Failed to fetch admin statistics", 500, error);
   }
 };
 
-const getEmployerStats = async (req: Request, res: Response): Promise<void> => {
+const getEmployerStats = async (req: Request, res: Response): Promise<any> => {
   try {
     const userId = req.user?.id;
-
-    if (!userId) {
-      res.status(401).json({ message: "Unauthorized" });
-      return;
-    }
+    if (!userId) return errorResponse(res, "Unauthorized", 401);
 
     const [products, recentProducts] = await Promise.all([
       prisma.product.findMany({
@@ -613,8 +566,6 @@ const getEmployerStats = async (req: Request, res: Response): Promise<void> => {
       }),
     ]);
 
-    // Find all orders that contain products belonging to this employer
-    // This requires checking OrderItem -> Product -> userId
     const orderItems = await prisma.orderItem.findMany({
       where: { product: { userId } },
       include: { order: true },
@@ -626,34 +577,39 @@ const getEmployerStats = async (req: Request, res: Response): Promise<void> => {
       0
     );
 
-    res.status(200).json({
-      success: true,
-      stats: {
-        totalRevenue,
-        totalOrders,
-        activeListings: products.length,
-        salesVelocity: totalOrders > 0 ? (totalOrders / 30).toFixed(1) : "0", // Simplified dummy velocity
+    return successResponse(
+      res,
+      {
+        stats: {
+          totalRevenue,
+          totalOrders,
+          activeListings: products.length,
+          salesVelocity: totalOrders > 0 ? (totalOrders / 30).toFixed(1) : "0",
+        },
+        recentListings: recentProducts,
       },
-      recentListings: recentProducts,
-    });
+      "Employer statistics fetched successfully"
+    );
   } catch (error) {
-    console.error("Error fetching employer stats:", error);
-    res.status(500).json({ message: "Internal server error" });
+    return errorResponse(
+      res,
+      "Failed to fetch employer statistics",
+      500,
+      error
+    );
   }
 };
 
 const getDetailedAnalytics = async (
   req: Request,
   res: Response
-): Promise<void> => {
+): Promise<any> => {
   try {
-    // User Growth (last 6 months)
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
     const [revenueByCategory, userGrowth, inventoryHealth, monthlyRevenueData] =
       await Promise.all([
-        // Revenue by Category (more efficient query)
         prisma.category.findMany({
           include: {
             products: {
@@ -665,17 +621,14 @@ const getDetailedAnalytics = async (
             },
           },
         }),
-        // User Growth
         prisma.user.count({
           where: { createdAt: { gte: sixMonthsAgo } },
         }),
-        // Low stock alerts
         prisma.variant.findMany({
           where: { stock: { lte: 10 } },
           include: { product: { select: { title: true } } },
           take: 10,
         }),
-        // Monthly Revenue for Chart
         prisma.order.findMany({
           where: {
             createdAt: { gte: sixMonthsAgo },
@@ -698,7 +651,6 @@ const getDetailedAnalytics = async (
       ),
     }));
 
-    // Process monthly revenue
     const months = [
       "JAN",
       "FEB",
@@ -729,16 +681,18 @@ const getDetailedAnalytics = async (
       })
       .reverse();
 
-    res.status(200).json({
-      success: true,
-      categoryRevenue,
-      userGrowth,
-      inventoryHealth,
-      monthlyStats,
-    });
+    return successResponse(
+      res,
+      {
+        categoryRevenue,
+        userGrowth,
+        inventoryHealth,
+        monthlyStats,
+      },
+      "Detailed analytics fetched successfully"
+    );
   } catch (error) {
-    console.error("Error fetching detailed analytics:", error);
-    res.status(500).json({ message: "Internal server error" });
+    return errorResponse(res, "Failed to fetch detailed analytics", 500, error);
   }
 };
 
@@ -748,7 +702,7 @@ const getEmployerProducts = async (
 ): Promise<any> => {
   try {
     const userId = req.user?.id;
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (!userId) return errorResponse(res, "Unauthorized", 401);
 
     const products = await prisma.product.findMany({
       where: { userId },
@@ -760,19 +714,21 @@ const getEmployerProducts = async (
       orderBy: { createdAt: "desc" },
     });
 
-    res.status(200).json({ success: true, products });
+    return successResponse(
+      res,
+      products,
+      "Employer products fetched successfully"
+    );
   } catch (error) {
-    console.error("Get employer products error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    return errorResponse(res, "Failed to fetch employer products", 500, error);
   }
 };
 
 const getEmployerOrders = async (req: Request, res: Response): Promise<any> => {
   try {
     const userId = req.user?.id;
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (!userId) return errorResponse(res, "Unauthorized", 401);
 
-    // Find all order items that belong to products owned by this employer
     const orderItems = await prisma.orderItem.findMany({
       where: { product: { userId } },
       include: {
@@ -788,7 +744,6 @@ const getEmployerOrders = async (req: Request, res: Response): Promise<any> => {
       orderBy: { createdAt: "desc" },
     });
 
-    // Group items by order to show them as distinct orders in the UI
     const ordersMap = new Map();
     orderItems.forEach((item: any) => {
       if (!ordersMap.has(item.orderId)) {
@@ -811,10 +766,9 @@ const getEmployerOrders = async (req: Request, res: Response): Promise<any> => {
     });
 
     const orders = Array.from(ordersMap.values());
-    res.status(200).json({ success: true, orders });
+    return successResponse(res, orders, "Employer orders fetched successfully");
   } catch (error) {
-    console.error("Get employer orders error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    return errorResponse(res, "Failed to fetch employer orders", 500, error);
   }
 };
 
@@ -826,16 +780,15 @@ const updateOrderItemStatus = async (
     const userId = req.user?.id;
     const { orderItemId, status, trackingNumber } = req.body;
 
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (!userId) return errorResponse(res, "Unauthorized", 401);
 
-    // Verify the order item belongs to the merchant
     const orderItem = await prisma.orderItem.findUnique({
       where: { id: orderItemId },
       include: { product: true },
     });
 
     if (!orderItem || orderItem.product.userId !== userId) {
-      return res.status(403).json({ message: "Forbidden: Not your product" });
+      return errorResponse(res, "Forbidden: Not your product", 403);
     }
 
     const updated = await prisma.orderItem.update({
@@ -846,13 +799,13 @@ const updateOrderItemStatus = async (
       },
     });
 
-    // Optional: Check if all items in the order are SHIPPED/DELIVERED and update main order status
-    // For now, keep it simple.
-
-    res.status(200).json({ success: true, orderItem: updated });
+    return successResponse(
+      res,
+      updated,
+      "Order item status updated successfully"
+    );
   } catch (error) {
-    console.error("Update order item status error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    return errorResponse(res, "Failed to update order item status", 500, error);
   }
 };
 

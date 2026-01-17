@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../config/database";
 import bcrypt from "bcrypt";
+import { successResponse, errorResponse } from "../utils/response";
 
 export const updateProfile = async (
   req: Request,
@@ -10,15 +11,11 @@ export const updateProfile = async (
     const { username } = req.body;
     const userId = req.user?.id;
 
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
+    if (!userId) return errorResponse(res, "Unauthorized", 401);
 
     const updatedUser = await prisma.user.update({
       where: { id: userId },
-      data: {
-        username,
-      },
+      data: { username },
       select: {
         id: true,
         username: true,
@@ -28,12 +25,12 @@ export const updateProfile = async (
       },
     });
 
-    res.json(updatedUser);
+    return successResponse(res, updatedUser, "Profile updated successfully");
   } catch (error: any) {
     if (error.code === "P2002") {
-      return res.status(400).json({ message: "Username already taken" });
+      return errorResponse(res, "Username already taken", 400);
     }
-    res.status(500).json({ message: "Internal server error" });
+    return errorResponse(res, "Internal server error", 500, error);
   }
 };
 
@@ -45,44 +42,29 @@ export const updatePassword = async (
     const { currentPassword, newPassword } = req.body;
     const userId = req.user?.id;
 
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
+    if (!userId) return errorResponse(res, "Unauthorized", 401);
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user || !user.password) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.password)
+      return errorResponse(res, "User not found", 404);
 
     const isMatch = await bcrypt.compare(currentPassword, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Incorrect current password" });
-    }
+    if (!isMatch) return errorResponse(res, "Incorrect current password", 400);
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
     await prisma.user.update({
       where: { id: userId },
-      data: {
-        password: hashedPassword,
-      },
+      data: { password: hashedPassword },
     });
 
-    res.json({ message: "Password updated successfully" });
+    return successResponse(res, null, "Password updated successfully");
   } catch (error) {
-    console.error("Update password error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    return errorResponse(res, "Internal server error", 500, error);
   }
 };
 
-/**
- * Save or update an Expo push token for the authenticated user.
- * This ensures that the mobile app can register its token for notifications.
- */
 export const savePushToken = async (
   req: Request,
   res: Response
@@ -91,54 +73,35 @@ export const savePushToken = async (
     const { token } = req.body;
     const userId = req.user?.id;
 
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
+    if (!userId) return errorResponse(res, "Unauthorized", 401);
+    if (!token) return errorResponse(res, "Token is required", 400);
 
-    if (!token) {
-      return res.status(400).json({ message: "Token is required" });
-    }
-
-    // Check if the token already exists in the system
     const existingToken = await prisma.pushToken.findUnique({
       where: { token },
     });
 
     if (existingToken) {
-      // If the token already belongs to this user, no action needed
       if (existingToken.userId === userId) {
-        return res.json({
-          message: "Token already registered",
-          data: existingToken,
-        });
+        return successResponse(res, existingToken, "Token already registered");
       } else {
-        // If the token belongs to a different user (e.g., someone logged out and someone else logged in)
-        // transfer the token to the current user.
         const updatedToken = await prisma.pushToken.update({
           where: { token },
           data: { userId },
         });
-        return res.json({
-          message: "Token transferred to current user",
-          data: updatedToken,
-        });
+        return successResponse(
+          res,
+          updatedToken,
+          "Token transferred to current user"
+        );
       }
     }
 
-    // Otherwise, create a new record for this token
     const newToken = await prisma.pushToken.create({
-      data: {
-        token,
-        userId,
-      },
+      data: { token, userId },
     });
 
-    res.status(201).json({
-      message: "Token saved successfully",
-      data: newToken,
-    });
+    return successResponse(res, newToken, "Token saved successfully", 201);
   } catch (error) {
-    console.error("Save push token error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    return errorResponse(res, "Internal server error", 500, error);
   }
 };

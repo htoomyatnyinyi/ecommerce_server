@@ -6,7 +6,7 @@ import { Request } from "express";
 // Define the base uploads path and subfolders
 const uploadsPath = path.join(__dirname, "../../uploads");
 
-console.log(__dirname, uploadsPath, "fileupload");
+// console.log(__dirname, uploadsPath, "fileupload");
 
 const subDirectories: Record<string, string> = {
   image: "image",
@@ -19,7 +19,7 @@ const subDirectories: Record<string, string> = {
 // Ensure the main uploads folder exists
 if (!fs.existsSync(uploadsPath)) {
   fs.mkdirSync(uploadsPath);
-  console.log("Created 'uploads' directory");
+  // console.log("Created 'uploads' directory");
 }
 
 // Ensure all subfolders exist
@@ -27,7 +27,7 @@ Object.values(subDirectories).forEach((subDir) => {
   const dirPath = path.join(uploadsPath, subDir);
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true });
-    console.log(`Created sub-directory ${subDir}`);
+    // console.log(`Created sub-directory ${subDir}`);
   }
 });
 

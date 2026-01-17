@@ -1,60 +1,46 @@
 import { Request, Response } from "express";
 import prisma from "../config/database";
+import { successResponse, errorResponse } from "../utils/response";
 
-/**
- * @description Get all addresses for the logged-in user
- * @route GET /api/addresses
- * @access Private
- */
-export const getAddresses = async (req: Request, res: Response) => {
-  const userId = req.user?.id;
-
+export const getAddresses = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
   try {
+    const userId = req.user?.id;
+    if (!userId) return errorResponse(res, "Unauthorized", 401);
+
     const addresses = await prisma.address.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
     });
-    res.status(200).json(addresses);
+    return successResponse(res, addresses, "Addresses fetched successfully");
   } catch (error) {
-    res.status(500).json({ error: "Failed to retrieve addresses." });
+    return errorResponse(res, "Failed to retrieve addresses", 500, error);
   }
 };
 
-/**
- * @description Create a new address for the logged-in user
- * @route POST /api/addresses
- * @access Private
- */
 export const createAddress = async (
   req: Request,
   res: Response
 ): Promise<any> => {
-  const userId = req.user?.id;
-  if (!userId) {
-    return res
-      .status(401)
-      .json({ error: "Unauthorized: User not authenticated." });
-  }
-
-  const { label, street, city, state, country, postalCode, isDefault } =
-    req.body;
-
-  console.log(req.body);
-
-  if (!street || !city || !country || !postalCode) {
-    return res.status(400).json({ error: "Missing required address fields." });
-  }
-
   try {
-    // If setting a new default, we need a transaction
+    const userId = req.user?.id;
+    if (!userId) return errorResponse(res, "Unauthorized", 401);
+
+    const { label, street, city, state, country, postalCode, isDefault } =
+      req.body;
+
+    if (!street || !city || !country || !postalCode) {
+      return errorResponse(res, "Missing required address fields", 400);
+    }
+
     if (isDefault) {
       const [_, newAddress] = await prisma.$transaction([
-        // 1. Set all other addresses for this user to isDefault: false
         prisma.address.updateMany({
           where: { userId },
           data: { isDefault: false },
         }),
-        // 2. Create the new address as the default
         prisma.address.create({
           data: {
             userId,
@@ -68,10 +54,14 @@ export const createAddress = async (
           },
         }),
       ]);
-      return res.status(201).json(newAddress);
+      return successResponse(
+        res,
+        newAddress,
+        "Address created successfully",
+        201
+      );
     }
 
-    // If not setting as default, just create it
     const newAddress = await prisma.address.create({
       data: {
         userId,
@@ -84,35 +74,35 @@ export const createAddress = async (
         isDefault: false,
       },
     });
-    return res.status(201).json(newAddress);
+    return successResponse(
+      res,
+      newAddress,
+      "Address created successfully",
+      201
+    );
   } catch (error) {
-    res.status(500).json({ error: "Failed to create address." });
+    return errorResponse(res, "Failed to create address", 500, error);
   }
 };
 
-/**
- * @description Update an existing address
- * @route PUT /api/addresses/:id
- * @access Private
- */
 export const updateAddress = async (
   req: Request,
   res: Response
 ): Promise<any> => {
-  const userId = req.user?.id;
-  const { id: addressId }: any = req.params;
-  const { label, street, city, state, country, postalCode, isDefault } =
-    req.body;
-
   try {
+    const userId = req.user?.id;
+    if (!userId) return errorResponse(res, "Unauthorized", 401);
+
+    const addressId = req.params.id as string;
+    const { label, street, city, state, country, postalCode, isDefault } =
+      req.body;
+
     if (isDefault) {
       const [_, updatedAddress] = await prisma.$transaction([
-        // 1. Unset any other default addresses for the user
         prisma.address.updateMany({
           where: { userId, NOT: { id: addressId } },
           data: { isDefault: false },
         }),
-        // 2. Update the target address
         prisma.address.update({
           where: { id: addressId },
           data: {
@@ -126,50 +116,44 @@ export const updateAddress = async (
           },
         }),
       ]);
-      return res.status(200).json(updatedAddress);
+      return successResponse(
+        res,
+        updatedAddress,
+        "Address updated successfully"
+      );
     }
 
-    // Standard update if not changing the default status
     const updatedAddress = await prisma.address.update({
-      where: { id: addressId, userId }, // Ensures user can only update their own address
+      where: { id: addressId, userId },
       data: { label, street, city, state, country, postalCode },
     });
 
-    res.status(200).json(updatedAddress);
+    return successResponse(res, updatedAddress, "Address updated successfully");
   } catch (error) {
-    res.status(500).json({ error: "Failed to update address." });
+    return errorResponse(res, "Failed to update address", 500, error);
   }
 };
 
-/**
- * @description Delete an address
- * @route DELETE /api/addresses/:id
- * @access Private
- */
 export const deleteAddress = async (
   req: Request,
   res: Response
 ): Promise<any> => {
-  const userId = req.user?.id;
-  const { id: addressId }: any = req.params;
-
   try {
-    // Using deleteMany ensures the user can only delete their own address
+    const userId = req.user?.id;
+    if (!userId) return errorResponse(res, "Unauthorized", 401);
+
+    const addressId = req.params.id as string;
+
     const deleteResult = await prisma.address.deleteMany({
-      where: {
-        id: addressId,
-        userId: userId,
-      },
+      where: { id: addressId, userId },
     });
 
     if (deleteResult.count === 0) {
-      return res.status(404).json({
-        error: "Address not found or you do not have permission to delete it.",
-      });
+      return errorResponse(res, "Address not found or permission denied", 404);
     }
 
-    res.status(200).json({ message: "Address deleted successfully." });
+    return successResponse(res, null, "Address deleted successfully");
   } catch (error) {
-    res.status(500).json({ error: "Failed to delete address." });
+    return errorResponse(res, "Failed to delete address", 500, error);
   }
 };

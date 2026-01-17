@@ -19,26 +19,9 @@ const allowedOrigins = [
 ];
 
 const corsOptions = {
-  origin: (
-    origin: string | undefined,
-    callback: (err: Error | null, allow?: boolean) => void
-  ) => {
-    const isAllowed =
-      !origin ||
-      allowedOrigins.includes(origin) ||
-      origin.startsWith("exp://") ||
-      origin.includes("10.0.2.2") || // Android Emulator
-      origin.includes("192.168."); // Local Network
-
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      console.log("CORS Denied for origin:", origin);
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+  origin: true, // Allow all origins in development
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["*"], // Allow all headers in development
   credentials: true,
   optionsSuccessStatus: 204,
 };
