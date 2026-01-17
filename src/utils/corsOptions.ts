@@ -1,10 +1,5 @@
-//   credentials: true, // Allow cookies and authentication headers
-//   optionsSuccessStatus: 204, // For legacy browser support
-// };
-
 import { FRONTEND_URL } from "./secrets";
-
-// export default corsOptions;
+import { NODE_ENV } from "./secrets";
 
 // Dynamic origin based on allowed domains
 const allowedOrigins = [
@@ -19,11 +14,36 @@ const allowedOrigins = [
 ];
 
 const corsOptions = {
-  origin: true, // Allow all origins in development
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  allowedHeaders: ["*"], // Allow all headers in development
+  origin: (origin: any, callback: any) => {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+
+    if (
+      allowedOrigins.indexOf(origin) !== -1 ||
+      process.env.NODE_ENV === "development"
+    ) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "Accept",
+  ],
   credentials: true,
   optionsSuccessStatus: 204,
 };
+
+// const corsOptions = {
+//   origin: true, // Allow all origins in development
+//   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+//   allowedHeaders: ["*"], // Allow all headers in development
+//   credentials: true,
+//   optionsSuccessStatus: 204,
+// };
 
 export default corsOptions;

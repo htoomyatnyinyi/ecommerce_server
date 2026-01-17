@@ -11,6 +11,7 @@ const EMAIL_HOST: string = process.env.EMAIL_HOST!;
 const EMAIL_PORT: number = parseInt(process.env.EMAIL_PORT!);
 const EMAIL_USER: string = process.env.EMAIL_USER!;
 const EMAIL_PASS: string = process.env.EMAIL_PASS!;
+// const NODE_ENV: string = process.env.NODE_ENV!;
 
 const FRONTEND_URL: string = process.env.FRONTEND_URL!;
 

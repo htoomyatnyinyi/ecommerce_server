@@ -10,7 +10,7 @@ import {
 
 const router = express.Router();
 
-// Public routes
+// Public routesr
 router.get("/config", getStripeConfig);
 
 // Webhook route (must be before express.json() middleware)
