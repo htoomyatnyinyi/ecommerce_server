@@ -69,8 +69,8 @@ export const createPaymentIntent = async (
       metadata: {
         userId,
         cartItemIds: cartItems.map((item) => item.id).join(","),
-        shippingAddressId,
-        billingAddressId,
+        shippingAddressId: shippingAddressId || "",
+        billingAddressId: billingAddressId || "",
       },
       automatic_payment_methods: { enabled: true },
     });
@@ -94,7 +94,11 @@ export const confirmPayment = async (
     const userId = req.user?.id;
     if (!userId) return errorResponse(res, "Unauthorized", 401);
 
-    const { paymentIntentId } = req.body;
+    const {
+      paymentIntentId,
+      shippingAddressId: reqShippingId,
+      billingAddressId: reqBillingId,
+    } = req.body;
     if (!paymentIntentId)
       return errorResponse(res, "Payment Intent ID is required", 400);
 
@@ -120,8 +124,18 @@ export const confirmPayment = async (
       return successResponse(res, order, "Order already processed");
     }
 
-    const { cartItemIds, shippingAddressId, billingAddressId } =
-      paymentIntent.metadata;
+    const {
+      cartItemIds,
+      shippingAddressId: metaShippingId,
+      billingAddressId: metaBillingId,
+    } = paymentIntent.metadata;
+
+    // Prioritize request body address, fall back to metadata, potentially empty string means undefined for Prisma if handled poorly
+    const shippingAddressId =
+      reqShippingId || (metaShippingId !== "" ? metaShippingId : undefined);
+    const billingAddressId =
+      reqBillingId || (metaBillingId !== "" ? metaBillingId : undefined);
+
     const ids = cartItemIds.split(",");
 
     const cartItems = await prisma.cartItem.findMany({

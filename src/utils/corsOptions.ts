@@ -35,7 +35,7 @@ const corsOptions = {
     "Accept",
   ],
   credentials: true,
-  optionsSuccessStatus: 204,
+  optionsSuccessStatus: 200,
 };
 
 // const corsOptions = {
