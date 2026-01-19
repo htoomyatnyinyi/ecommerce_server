@@ -8,7 +8,7 @@ import { successResponse, errorResponse } from "../utils/response";
 // Create Stripe PaymentIntent
 export const createPaymentIntent = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const userId = req.user?.id;
@@ -34,7 +34,7 @@ export const createPaymentIntent = async (
         return errorResponse(
           res,
           `Insufficient stock for ${item.product.title}`,
-          400
+          400,
         );
       }
     }
@@ -62,6 +62,11 @@ export const createPaymentIntent = async (
       });
     }
 
+    const ephemeralKey = await stripe.ephemeralKeys.create(
+      { customer: customerId },
+      { apiVersion: "2024-12-18.acacia" },
+    );
+
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountInCents,
       currency: "usd",
@@ -78,9 +83,12 @@ export const createPaymentIntent = async (
     return successResponse(res, {
       clientSecret: paymentIntent.client_secret,
       paymentIntentId: paymentIntent.id,
+      customer: customerId,
+      ephemeralKey: ephemeralKey.secret,
       amount: totalAmount,
     });
   } catch (error) {
+    console.error("Stripe Error:", error);
     return errorResponse(res, "Failed to create payment intent", 500, error);
   }
 };
@@ -88,7 +96,7 @@ export const createPaymentIntent = async (
 // Confirm payment and create order
 export const confirmPayment = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const userId = req.user?.id;
@@ -107,7 +115,7 @@ export const confirmPayment = async (
       return errorResponse(
         res,
         `Payment not successful: ${paymentIntent.status}`,
-        400
+        400,
       );
     }
 
@@ -210,7 +218,7 @@ export const getStripeConfig = (req: Request, res: Response): any => {
 
 export const handleWebhook = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   // Webhook implementation depends on Stripe signing secret which might not be set in dev
   // Standard boilerplate for now
