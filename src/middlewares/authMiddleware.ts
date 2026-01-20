@@ -1,12 +1,15 @@
 import { NextFunction, Request, Response } from "express";
 import { JWT_REFRESH_SECRET, JWT_SECRET } from "../utils/secrets";
 import jwt from "jsonwebtoken";
+import prisma from "../config/database";
 
 // Type definitions
 declare global {
   namespace Express {
     interface Request {
-      user?: JwtPayload;
+      //   user?: JwtPayload;
+      // }
+      user?: JwtPayload & { isEmailVerified?: boolean };
     }
   }
 }
@@ -39,10 +42,28 @@ const authenticated = async (
   }
 
   try {
+    // verify JWT
     const decoded = jwt.verify(accessToken, JWT_SECRET) as JwtPayload;
-    // console.log("Token decoded successfully:", decoded);
 
-    req.user = decoded; // ceck later
+    // req.user = decoded; // ceck later
+
+    // ---------------------------------------------------------------
+    // NEW: verify that the user’s email is confirmed
+    // ---------------------------------------------------------------
+    const dbUser = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: { isEmailVerified: true },
+    });
+    if (!dbUser?.isEmailVerified) {
+      // Email not verified – block the request
+      res.status(403).json({
+        message: "Email not verified",
+        error: "Please verify your email before accessing this resource",
+      });
+      return;
+    }
+    // Attach full user info (including verification flag) to the request
+    req.user = { ...decoded, isEmailVerified: dbUser.isEmailVerified };
 
     next();
   } catch (error) {
@@ -64,7 +85,7 @@ const handleRefreshToken = async (
   const cookies = req.cookies as AuthCookies;
   const refreshToken = cookies.refresh_id;
 
-  console.log("WHEN handleRefreshToken - Cookies received:", req.cookies);
+  // console.log("WHEN handleRefreshToken - Cookies received:", req.cookies);
 
   if (!refreshToken) {
     res.status(401).json({

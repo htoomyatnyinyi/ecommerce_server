@@ -1,30 +1,17 @@
 import { Request, Response } from "express";
 import prisma from "../config/database";
+import { successResponse, errorResponse } from "../utils/response";
 
-/**
- * @description Get all payments for the logged-in user's orders
- * @route GET /api/payment
- * @access Private
- */
 export const getPayments = async (
   req: Request,
   res: Response
 ): Promise<any> => {
-  const userId = req.user?.id;
-
-  if (!userId) {
-    return res
-      .status(401)
-      .json({ error: "Unauthorized: User not authenticated." });
-  }
-
   try {
+    const userId = req.user?.id;
+    if (!userId) return errorResponse(res, "Unauthorized", 401);
+
     const payments = await prisma.payment.findMany({
-      where: {
-        order: {
-          userId: userId,
-        },
-      },
+      where: { order: { userId } },
       include: {
         order: {
           select: {
@@ -38,48 +25,31 @@ export const getPayments = async (
       orderBy: { createdAt: "desc" },
     });
 
-    res.status(200).json({ success: true, payments });
+    return successResponse(res, payments, "Payments fetched successfully");
   } catch (error) {
-    console.error("Error fetching payments:", error);
-    res.status(500).json({ error: "Failed to retrieve payments." });
+    return errorResponse(res, "Failed to retrieve payments", 500, error);
   }
 };
 
-/**
- * @description Get a specific payment by ID
- * @route GET /api/payment/:id
- * @access Private
- */
 export const getPaymentById = async (
   req: Request,
   res: Response
 ): Promise<any> => {
-  const userId = req.user?.id;
-  const { id: paymentId }: any = req.params;
-
-  if (!userId) {
-    return res
-      .status(401)
-      .json({ error: "Unauthorized: User not authenticated." });
-  }
-
   try {
+    const userId = req.user?.id;
+    if (!userId) return errorResponse(res, "Unauthorized", 401);
+
+    const paymentId = req.params.id as string;
+
     const payment = await prisma.payment.findFirst({
       where: {
         id: paymentId,
-        order: {
-          userId: userId,
-        },
+        order: { userId },
       },
       include: {
         order: {
           include: {
-            items: {
-              include: {
-                product: true,
-                variant: true,
-              },
-            },
+            items: { include: { product: true, variant: true } },
             shippingAddress: true,
             billingAddress: true,
           },
@@ -87,96 +57,69 @@ export const getPaymentById = async (
       },
     });
 
-    if (!payment) {
-      return res.status(404).json({ error: "Payment not found." });
-    }
+    if (!payment) return errorResponse(res, "Payment not found", 404);
 
-    res.status(200).json({ success: true, payment });
+    return successResponse(res, payment, "Payment fetched successfully");
   } catch (error) {
-    console.error("Error fetching payment:", error);
-    res.status(500).json({ error: "Failed to retrieve payment." });
+    return errorResponse(res, "Failed to retrieve payment", 500, error);
   }
 };
 
-/**
- * @description Update payment status (admin only)
- * @route PUT /api/payment/:id
- * @access Private/Admin
- */
 export const updatePaymentStatus = async (
   req: Request,
   res: Response
 ): Promise<any> => {
-  const { id: paymentId }: any = req.params;
-  const { paymentStatus } = req.body;
-
-  if (!paymentStatus) {
-    return res.status(400).json({ error: "Payment status is required." });
-  }
-
   try {
+    const paymentId = req.params.id as string;
+    const { paymentStatus } = req.body;
+
+    if (!paymentStatus)
+      return errorResponse(res, "Payment status is required", 400);
+
     const updatedPayment = await prisma.payment.update({
       where: { id: paymentId },
       data: { paymentStatus },
-      include: {
-        order: true,
-      },
+      include: { order: true },
     });
 
-    res.status(200).json({ success: true, payment: updatedPayment });
+    return successResponse(
+      res,
+      updatedPayment,
+      "Payment status updated successfully"
+    );
   } catch (error) {
-    console.error("Error updating payment:", error);
-    res.status(500).json({ error: "Failed to update payment status." });
+    return errorResponse(res, "Failed to update payment status", 500, error);
   }
 };
 
-/**
- * @description Get payment by Stripe PaymentIntent ID
- * @route GET /api/payment/stripe/:paymentIntentId
- * @access Private
- */
 export const getPaymentByStripeIntent = async (
   req: Request,
   res: Response
 ): Promise<any> => {
-  const userId = req.user?.id;
-  const { paymentIntentId }: any = req.params;
-
-  if (!userId) {
-    return res
-      .status(401)
-      .json({ error: "Unauthorized: User not authenticated." });
-  }
-
   try {
+    const userId = req.user?.id;
+    if (!userId) return errorResponse(res, "Unauthorized", 401);
+
+    const paymentIntentId = req.params.paymentIntentId as string;
+
     const payment = await prisma.payment.findFirst({
       where: {
         stripePaymentIntentId: paymentIntentId,
-        order: {
-          userId: userId,
-        },
+        order: { userId },
       },
       include: {
         order: {
           include: {
-            items: {
-              include: {
-                product: true,
-                variant: true,
-              },
-            },
+            items: { include: { product: true, variant: true } },
           },
         },
       },
     });
 
-    if (!payment) {
-      return res.status(404).json({ error: "Payment not found." });
-    }
+    if (!payment) return errorResponse(res, "Payment not found", 404);
 
-    res.status(200).json({ success: true, payment });
+    return successResponse(res, payment, "Payment fetched successfully");
   } catch (error) {
-    console.error("Error fetching payment by Stripe intent:", error);
-    res.status(500).json({ error: "Failed to retrieve payment." });
+    return errorResponse(res, "Failed to retrieve payment", 500, error);
   }
 };

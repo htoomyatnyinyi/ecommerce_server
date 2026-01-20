@@ -1,38 +1,25 @@
 import { Request, Response } from "express";
-
 import prisma from "../config/database";
+import { successResponse, errorResponse } from "../utils/response";
 
 export const createCategory = async (
   req: Request,
   res: Response
 ): Promise<any> => {
-  const userId = req.user?.id;
-  if (!userId) {
-    return res
-      .status(401)
-      .json({ message: "Unauthorized: User not authenticated" });
-  }
-  console.log(req.body, "at category");
-  // const { categoryName } = req.body;
-  const { name } = req.body;
-
   try {
-    const categoryResponse = await prisma.category.create({
-      // data: {
-      //   categoryName
-      // },
-      data: {
-        categoryName: name,
-      },
+    const userId = req.user?.id;
+    if (!userId) return errorResponse(res, "Unauthorized", 401);
+
+    const { name } = req.body;
+    if (!name) return errorResponse(res, "Category name is required", 400);
+
+    const category = await prisma.category.create({
+      data: { categoryName: name },
     });
-    res.status(201).json(categoryResponse);
+
+    return successResponse(res, category, "Category created successfully", 201);
   } catch (error) {
-    console.error("Error fetching products:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed create category ",
-      error: process.env.NODE_ENV === "dewwwvelopment" ? error : undefined,
-    });
+    return errorResponse(res, "Failed to create category", 500, error);
   }
 };
 
@@ -41,24 +28,11 @@ export const getCategory = async (
   res: Response
 ): Promise<any> => {
   try {
-    const categoryResponse = await prisma.category.findMany();
-    res.status(200).json(categoryResponse);
-  } catch (error) {
-    console.error("Error fetching products:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch category",
-      error: process.env.NODE_ENV === "dewwwvelopment" ? error : undefined,
+    const categories = await prisma.category.findMany({
+      orderBy: { categoryName: "asc" },
     });
+    return successResponse(res, categories, "Categories fetched successfully");
+  } catch (error) {
+    return errorResponse(res, "Failed to fetch categories", 500, error);
   }
 };
-
-// export const createCategory = async (
-//   req: Request,
-//   res: Response
-// ): Promise<any> => {
-//   try {
-//   } catch (error) {
-//     console.error(error);
-//   }
-// };
